@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vehicle Power of Attorney Platform</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <div class="logo">
+                <span class="logo-icon">&#9878;</span>
+                <span>AutoPOA</span>
+            </div>
+            <ul class="nav-links">
+                <li><a href="#home" class="active">Home</a></li>
+                <li><a href="#create">Create POA</a></li>
+                <li><a href="#manage">My Documents</a></li>
+                <li><a href="#faq">FAQ</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <!-- Home Section -->
+        <section id="home" class="section hero">
+            <div class="hero-content">
+                <h1>Vehicle Power of Attorney</h1>
+                <p>Create, manage, and track Power of Attorney documents for vehicle transactions. Simple, fast, and legally structured.</p>
+                <div class="hero-actions">
+                    <button class="btn btn-primary" onclick="showSection('create')">Create New POA</button>
+                    <button class="btn btn-secondary" onclick="showSection('manage')">View My Documents</button>
+                </div>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">&#128196;</div>
+                        <h3>Easy Creation</h3>
+                        <p>Step-by-step guided form to create your vehicle POA in minutes.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">&#128274;</div>
+                        <h3>Secure Storage</h3>
+                        <p>Documents stored locally in your browser for privacy.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">&#128438;</div>
+                        <h3>PDF Export</h3>
+                        <p>Download your completed POA as a printable document.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">&#128203;</div>
+                        <h3>Multiple Types</h3>
+                        <p>Support for sale, registration, title transfer, and more.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Create POA Section -->
+        <section id="create" class="section" style="display:none;">
+            <div class="form-container">
+                <h2>Create Vehicle Power of Attorney</h2>
+                <div class="progress-bar">
+                    <div class="progress-step active" data-step="1">
+                        <span class="step-number">1</span>
+                        <span class="step-label">POA Type</span>
+                    </div>
+                    <div class="progress-step" data-step="2">
+                        <span class="step-number">2</span>
+                        <span class="step-label">Principal</span>
+                    </div>
+                    <div class="progress-step" data-step="3">
+                        <span class="step-number">3</span>
+                        <span class="step-label">Attorney</span>
+                    </div>
+                    <div class="progress-step" data-step="4">
+                        <span class="step-number">4</span>
+                        <span class="step-label">Vehicle</span>
+                    </div>
+                    <div class="progress-step" data-step="5">
+                        <span class="step-number">5</span>
+                        <span class="step-label">Review</span>
+                    </div>
+                </div>
+
+                <form id="poa-form" onsubmit="return false;">
+                    <!-- Step 1: POA Type -->
+                    <div class="form-step active" data-step="1">
+                        <h3>Select Power of Attorney Type</h3>
+                        <div class="poa-type-grid">
+                            <label class="poa-type-card">
+                                <input type="radio" name="poaType" value="sale" checked>
+                                <div class="card-content">
+                                    <div class="card-icon">&#128181;</div>
+                                    <h4>Vehicle Sale</h4>
+                                    <p>Authorize someone to sell your vehicle on your behalf.</p>
+                                </div>
+                            </label>
+                            <label class="poa-type-card">
+                                <input type="radio" name="poaType" value="registration">
+                                <div class="card-content">
+                                    <div class="card-icon">&#128209;</div>
+                                    <h4>Registration</h4>
+                                    <p>Authorize someone to register or renew registration.</p>
+                                </div>
+                            </label>
+                            <label class="poa-type-card">
+                                <input type="radio" name="poaType" value="title_transfer">
+                                <div class="card-content">
+                                    <div class="card-icon">&#128196;</div>
+                                    <h4>Title Transfer</h4>
+                                    <p>Authorize someone to transfer the vehicle title.</p>
+                                </div>
+                            </label>
+                            <label class="poa-type-card">
+                                <input type="radio" name="poaType" value="general">
+                                <div class="card-content">
+                                    <div class="card-icon">&#128221;</div>
+                                    <h4>General Vehicle POA</h4>
+                                    <p>Broad authority for all vehicle-related transactions.</p>
+                                </div>
+                            </label>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="expirationDate">Expiration Date</label>
+                            <input type="date" id="expirationDate" name="expirationDate" required>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: Principal (Vehicle Owner) -->
+                    <div class="form-step" data-step="2">
+                        <h3>Principal (Vehicle Owner) Information</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="principalFirstName">First Name *</label>
+                                <input type="text" id="principalFirstName" name="principalFirstName" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="principalLastName">Last Name *</label>
+                                <input type="text" id="principalLastName" name="principalLastName" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="principalAddress">Street Address *</label>
+                            <input type="text" id="principalAddress" name="principalAddress" required>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="principalCity">City *</label>
+                                <input type="text" id="principalCity" name="principalCity" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="principalState">State *</label>
+                                <input type="text" id="principalState" name="principalState" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="principalZip">ZIP Code *</label>
+                                <input type="text" id="principalZip" name="principalZip" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="principalPhone">Phone Number *</label>
+                                <input type="tel" id="principalPhone" name="principalPhone" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="principalEmail">Email</label>
+                                <input type="email" id="principalEmail" name="principalEmail">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="principalId">ID Number (Driver's License / Passport) *</label>
+                            <input type="text" id="principalId" name="principalId" required>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: Attorney-in-Fact -->
+                    <div class="form-step" data-step="3">
+                        <h3>Attorney-in-Fact (Authorized Person) Information</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="attorneyFirstName">First Name *</label>
+                                <input type="text" id="attorneyFirstName" name="attorneyFirstName" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="attorneyLastName">Last Name *</label>
+                                <input type="text" id="attorneyLastName" name="attorneyLastName" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="attorneyAddress">Street Address *</label>
+                            <input type="text" id="attorneyAddress" name="attorneyAddress" required>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="attorneyCity">City *</label>
+                                <input type="text" id="attorneyCity" name="attorneyCity" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="attorneyState">State *</label>
+                                <input type="text" id="attorneyState" name="attorneyState" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="attorneyZip">ZIP Code *</label>
+                                <input type="text" id="attorneyZip" name="attorneyZip" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="attorneyPhone">Phone Number *</label>
+                                <input type="tel" id="attorneyPhone" name="attorneyPhone" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="attorneyEmail">Email</label>
+                                <input type="email" id="attorneyEmail" name="attorneyEmail">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="attorneyId">ID Number (Driver's License / Passport) *</label>
+                            <input type="text" id="attorneyId" name="attorneyId" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="relationship">Relationship to Principal</label>
+                            <select id="relationship" name="relationship">
+                                <option value="">-- Select --</option>
+                                <option value="spouse">Spouse</option>
+                                <option value="parent">Parent</option>
+                                <option value="child">Child</option>
+                                <option value="sibling">Sibling</option>
+                                <option value="friend">Friend</option>
+                                <option value="dealer">Dealer / Agent</option>
+                                <option value="attorney">Attorney / Lawyer</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Step 4: Vehicle Information -->
+                    <div class="form-step" data-step="4">
+                        <h3>Vehicle Information</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="vehicleYear">Year *</label>
+                                <input type="number" id="vehicleYear" name="vehicleYear" min="1900" max="2027" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="vehicleMake">Make *</label>
+                                <input type="text" id="vehicleMake" name="vehicleMake" placeholder="e.g. Toyota" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="vehicleModel">Model *</label>
+                                <input type="text" id="vehicleModel" name="vehicleModel" placeholder="e.g. Camry" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="vehicleVin">VIN (Vehicle Identification Number) *</label>
+                                <input type="text" id="vehicleVin" name="vehicleVin" maxlength="17" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="vehicleColor">Color</label>
+                                <input type="text" id="vehicleColor" name="vehicleColor">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="vehiclePlate">License Plate Number</label>
+                                <input type="text" id="vehiclePlate" name="vehiclePlate">
+                            </div>
+                            <div class="form-group">
+                                <label for="vehiclePlateState">Plate State</label>
+                                <input type="text" id="vehiclePlateState" name="vehiclePlateState">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="vehicleMileage">Current Mileage</label>
+                                <input type="number" id="vehicleMileage" name="vehicleMileage">
+                            </div>
+                            <div class="form-group">
+                                <label for="vehicleTitleNumber">Title Number</label>
+                                <input type="text" id="vehicleTitleNumber" name="vehicleTitleNumber">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="additionalTerms">Additional Terms or Conditions</label>
+                            <textarea id="additionalTerms" name="additionalTerms" rows="4" placeholder="Any specific limitations or instructions..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Step 5: Review -->
+                    <div class="form-step" data-step="5">
+                        <h3>Review Your Power of Attorney</h3>
+                        <div id="review-content" class="review-panel"></div>
+                        <div class="form-group acknowledgment">
+                            <label>
+                                <input type="checkbox" id="ackCheckbox" required>
+                                I acknowledge that this document is for informational purposes and may require notarization or additional legal steps to be valid in my jurisdiction.
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" id="prevBtn" onclick="changeStep(-1)" style="display:none;">Previous</button>
+                        <button type="button" class="btn btn-primary" id="nextBtn" onclick="changeStep(1)">Next</button>
+                        <button type="button" class="btn btn-primary" id="submitBtn" onclick="submitPOA()" style="display:none;">Create Document</button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- Manage Documents Section -->
+        <section id="manage" class="section" style="display:none;">
+            <div class="manage-container">
+                <div class="manage-header">
+                    <h2>My Documents</h2>
+                    <button class="btn btn-primary" onclick="showSection('create')">+ New POA</button>
+                </div>
+                <div id="documents-list" class="documents-list">
+                    <div class="empty-state">
+                        <div class="empty-icon">&#128194;</div>
+                        <h3>No documents yet</h3>
+                        <p>Create your first Vehicle Power of Attorney to get started.</p>
+                        <button class="btn btn-primary" onclick="showSection('create')">Create New POA</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- FAQ Section -->
+        <section id="faq" class="section" style="display:none;">
+            <div class="faq-container">
+                <h2>Frequently Asked Questions</h2>
+                <div class="faq-list">
+                    <div class="faq-item">
+                        <button class="faq-question" onclick="toggleFaq(this)">
+                            What is a Vehicle Power of Attorney?
+                            <span class="faq-toggle">+</span>
+                        </button>
+                        <div class="faq-answer">
+                            <p>A Vehicle Power of Attorney (POA) is a legal document that authorizes another person (the attorney-in-fact) to act on your behalf regarding vehicle-related matters such as selling, registering, or transferring the title of your vehicle.</p>
+                        </div>
+                    </div>
+                    <div class="faq-item">
+                        <button class="faq-question" onclick="toggleFaq(this)">
+                            When do I need a Vehicle POA?
+                            <span class="faq-toggle">+</span>
+                        </button>
+                        <div class="faq-answer">
+                            <p>Common situations include: you are selling a vehicle but cannot be present, you need someone to handle DMV paperwork on your behalf, you are deployed military and need vehicle matters handled, or you are purchasing a vehicle through an agent.</p>
+                        </div>
+                    </div>
+                    <div class="faq-item">
+                        <button class="faq-question" onclick="toggleFaq(this)">
+                            Does a Vehicle POA need to be notarized?
+                            <span class="faq-toggle">+</span>
+                        </button>
+                        <div class="faq-answer">
+                            <p>Requirements vary by state. Many states require notarization for a vehicle POA to be valid. We recommend having your document notarized to ensure it is accepted by your local DMV or relevant authority.</p>
+                        </div>
+                    </div>
+                    <div class="faq-item">
+                        <button class="faq-question" onclick="toggleFaq(this)">
+                            How long is a Vehicle POA valid?
+                            <span class="faq-toggle">+</span>
+                        </button>
+                        <div class="faq-answer">
+                            <p>The validity period depends on the expiration date you set in the document. If no date is specified, it typically remains valid until revoked by the principal. Some states may have maximum validity periods.</p>
+                        </div>
+                    </div>
+                    <div class="faq-item">
+                        <button class="faq-question" onclick="toggleFaq(this)">
+                            Can I revoke a Vehicle POA?
+                            <span class="faq-toggle">+</span>
+                        </button>
+                        <div class="faq-answer">
+                            <p>Yes, a principal can revoke a POA at any time by providing written notice to the attorney-in-fact. It is recommended to also notify any institutions (DMV, insurance companies) that may have a copy of the original POA.</p>
+                        </div>
+                    </div>
+                    <div class="faq-item">
+                        <button class="faq-question" onclick="toggleFaq(this)">
+                            Is this platform a substitute for legal advice?
+                            <span class="faq-toggle">+</span>
+                        </button>
+                        <div class="faq-answer">
+                            <p>No. This platform helps you generate a structured POA document, but it is not a law firm and does not provide legal advice. For complex situations, we recommend consulting with a licensed attorney in your jurisdiction.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Document Preview Modal -->
+        <div id="preview-modal" class="modal" style="display:none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Power of Attorney Document</h2>
+                    <button class="modal-close" onclick="closeModal()">&times;</button>
+                </div>
+                <div id="modal-body" class="modal-body"></div>
+                <div class="modal-actions">
+                    <button class="btn btn-primary" onclick="printDocument()">Print Document</button>
+                    <button class="btn btn-secondary" onclick="closeModal()">Close</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>AutoPOA - Vehicle Power of Attorney Platform</p>
+        <p class="disclaimer">This platform generates documents for informational purposes. Consult a legal professional for advice specific to your situation.</p>
+    </footer>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
