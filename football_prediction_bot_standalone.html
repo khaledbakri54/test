@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚽ Football Prediction Bot</title>
+    <style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:linear-gradient(135deg,#1e3a5f,#0f172a);min-height:100vh;padding:20px;color:#1e293b}
+    .container{max-width:1300px;margin:0 auto}header{text-align:center;color:#fff;margin-bottom:28px}header h1{font-size:2.4em;margin-bottom:6px}header p{opacity:.8}.grid{display:grid;grid-template-columns:420px 1fr;gap:20px}@media(max-width:1024px){.grid{grid-template-columns:1fr}}.card{background:#fff;border-radius:16px;padding:24px;box-shadow:0 4px 20px rgba(0,0,0,.12)}.card-title{font-size:1.25em;font-weight:700;margin-bottom:20px;display:flex;align-items:center;gap:8px}.form-group{margin-bottom:14px}label{display:block;font-weight:600;font-size:.9em;margin-bottom:5px;color:#64748b}select,input{width:100%;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:1em;transition:border .2s}select:focus,input:focus{outline:0;border-color:#2563eb}.btn{width:100%;padding:12px 24px;border:0;border-radius:8px;font-size:1em;font-weight:700;cursor:pointer;background:#2563eb;color:#fff;transition:all .2s}
+    .btn:hover:not(:disabled){background:#1d4ed8;transform:translateY(-1px)}
+    .btn:disabled{background:#94a3b8;cursor:not-allowed}.probs{margin-bottom:20px}.prob-item{margin-bottom:14px}.prob-meta{display:flex;justify-content:space-between;font-weight:600;font-size:.95em;margin-bottom:5px}.prob-track{height:28px;background:#f1f5f9;border-radius:6px;overflow:hidden}.prob-fill{height:100%;border-radius:6px;display:flex;align-items:center;justify-content:flex-end;padding-right:10px;color:#fff;font-weight:700;font-size:.85em;transition:width .6s}
+    .fill-home{background:linear-gradient(90deg,#3b82f6,#1d4ed8)}.fill-draw{background:linear-gradient(90deg,#f59e0b,#d97706)}.fill-away{background:linear-gradient(90deg,#ef4444,#b91c1c)}.outcome{border-radius:12px;padding:20px;text-align:center;margin-bottom:20px}.outcome-home{background:linear-gradient(135deg,#dbeafe,#bfdbfe)}.outcome-draw{background:linear-gradient(135deg,#fef9c3,#fde68a)}.outcome-away{background:linear-gradient(135deg,#fee2e2,#fecaca)}.outcome-result{font-size:1.8em;font-weight:800;color:#1e293b;margin-top:8px}.stats-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:20px}.stat-box{background:#f8fafc;border-radius:10px;padding:14px;text-align:center}.stat-label{font-size:.8em;color:#64748b;font-weight:600;text-transform:uppercase;margin-bottom:4px}.stat-val{font-size:1.7em;font-weight:800;color:#2563eb}.scorelines{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:20px}.score-box{background:#f8fafc;border-radius:8px;padding:10px;text-align:center}.score-num{font-size:1.3em;font-weight:800;color:#2563eb}.score-pct{font-size:.75em;color:#64748b;margin-top:2px}.models-grid{display:grid;gap:8px;margin-bottom:20px}.model-row{display:grid;grid-template-columns:100px 1fr 1fr 1fr;gap:8px;align-items:center;background:#f8fafc;border-radius:8px;padding:10px 14px;font-size:.9em}.model-name{font-weight:700;color:#1e293b}.m-val{text-align:center;font-weight:600}.m-home{color:#3b82f6}.m-draw{color:#f59e0b}.m-away{color:#ef4444}.placeholder{text-align:center;padding:60px 20px;color:#64748b}.placeholder .icon{font-size:4em;margin-bottom:16px}.spinner{display:none;text-align:center;padding:40px}.spinner.active{display:block}.spin{width:40px;height:40px;border:4px solid #e2e8f0;border-top-color:#2563eb;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px}@keyframes spin{to{transform:rotate(360deg)}}.section-title{font-weight:700;font-size:1em;margin-bottom:12px;display:flex;align-items:center;gap:6px}</style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>⚽ Football Prediction Bot</h1>
+        <p>AI-powered match analysis — No server needed!</p>
+    </header>
+
+    <div class="grid">
+        <div class="card">
+            <div class="card-title">🎯 Match Setup</div>
+            <div class="form-group">
+                <label>🏆 Competition</label>
+                <select id="league" onchange="filterTeams()">
+                    <option value="">All Teams</option>
+                    <option value="Premier League">Premier League</option>
+                    <option value="La Liga">La Liga</option>
+                    <option value="Bundesliga">Bundesliga</option>
+                    <option value="Serie A">Serie A</option>
+                    <option value="Ligue 1">Ligue 1</option>
+                    <option value="Eredivisie">Eredivisie</option>
+                    <option value="Primeira Liga">Primeira Liga</option>
+                    <option value="International">National Teams</option>
+                </select>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                <div class="form-group">
+                    <label>🏠 Home Team</label>
+                    <select id="home" onchange="check()"><option>-- Select --</option></select>
+                </div>
+                <div class="form-group">
+                    <label>✈️ Away Team</label>
+                    <select id="away" onchange="check()"><option>-- Select --</option></select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label><input type="checkbox" id="neutral"> 🏟 Neutral Venue</label>
+            </div>
+            <button class="btn" id="btn" onclick="predict()" disabled>🔮 Predict</button>
+        </div>
+
+        <div class="card">
+            <div class="card-title">📊 Results</div>
+            <div id="placeholder" class="placeholder">
+                <div class="icon">⚽</div>
+                <p>Select two teams to predict</p>
+            </div>
+            <div class="spinner" id="spinner"><div class="spin"></div></div>
+            <div id="results" style="display:none"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+const TEAMS = {
+"Manchester City":{"league":"Premier League","avg_scored":2.1,"avg_conceded":0.9,"win_rate":0.62,"elo":1850,"form":["W","W","D","W","W","L"],"color":"#6CABDD"},
+"Arsenal":{"league":"Premier League","avg_scored":2.2,"avg_conceded":0.8,"win_rate":0.65,"elo":1820,"form":["W","W","W","D","W","W"],"color":"#EF0107"},
+"Liverpool":{"league":"Premier League","avg_scored":2.3,"avg_conceded":1.0,"win_rate":0.63,"elo":1830,"form":["W","W","W","W","D","W"],"color":"#C8102E"},
+"Chelsea":{"league":"Premier League","avg_scored":1.9,"avg_conceded":1.1,"win_rate":0.55,"elo":1720,"form":["W","D","W","L","W","D"],"color":"#034694"},
+"Manchester United":{"league":"Premier League","avg_scored":1.5,"avg_conceded":1.4,"win_rate":0.42,"elo":1680,"form":["L","D","W","L","D","W"],"color":"#DA291C"},
+"Real Madrid":{"league":"La Liga","avg_scored":2.5,"avg_conceded":0.8,"win_rate":0.72,"elo":1950,"form":["W","W","W","D","W","W"],"color":"#FEBE10"},
+"Barcelona":{"league":"La Liga","avg_scored":2.4,"avg_conceded":0.9,"win_rate":0.70,"elo":1900,"form":["W","W","W","W","D","W"],"color":"#A50044"},
+"Atletico Madrid":{"league":"La Liga","avg_scored":1.8,"avg_conceded":0.7,"win_rate":0.62,"elo":1800,"form":["W","D","W","W","D","W"],"color":"#CB3524"},
+"Bayern Munich":{"league":"Bundesliga","avg_scored":2.8,"avg_conceded":1.0,"win_rate":0.72,"elo":1920,"form":["W","W","W","W","W","D"],"color":"#DC052D"},
+"Bayer Leverkusen":{"league":"Bundesliga","avg_scored":2.3,"avg_conceded":0.9,"win_rate":0.65,"elo":1800,"form":["W","W","W","D","W","W"],"color":"#E32221"},
+"Inter Milan":{"league":"Serie A","avg_scored":2.2,"avg_conceded":0.8,"win_rate":0.68,"elo":1860,"form":["W","W","D","W","W","W"],"color":"#0066B3"},
+"AC Milan":{"league":"Serie A","avg_scored":1.8,"avg_conceded":1.0,"win_rate":0.55,"elo":1760,"form":["W","D","W","L","W","D"],"color":"#FB090B"},
+"Napoli":{"league":"Serie A","avg_scored":1.9,"avg_conceded":1.0,"win_rate":0.57,"elo":1770,"form":["W","W","D","W","W","L"],"color":"#12A0C3"},
+"PSG":{"league":"Ligue 1","avg_scored":2.6,"avg_conceded":0.7,"win_rate":0.75,"elo":1900,"form":["W","W","W","W","W","D"],"color":"#003F8A"},
+"Monaco":{"league":"Ligue 1","avg_scored":2.0,"avg_conceded":1.1,"win_rate":0.58,"elo":1720,"form":["W","W","D","W","L","W"],"color":"#E4141A"},
+"Ajax":{"league":"Eredivisie","avg_scored":2.4,"avg_conceded":1.0,"win_rate":0.65,"elo":1760,"form":["W","W","D","W","W","W"],"color":"#D2122E"},
+"PSV Eindhoven":{"league":"Eredivisie","avg_scored":2.6,"avg_conceded":0.7,"win_rate":0.75,"elo":1810,"form":["W","W","W","W","W","D"],"color":"#ED1C24"},
+"Benfica":{"league":"Primeira Liga","avg_scored":2.2,"avg_conceded":0.9,"win_rate":0.67,"elo":1770,"form":["W","W","W","D","W","L"],"color":"#E4002B"},
+"Porto":{"league":"Primeira Liga","avg_scored":2.1,"avg_conceded":0.8,"win_rate":0.65,"elo":1760,"form":["W","W","D","W","W","D"],"color":"#003087"},
+"Brazil":{"league":"International","avg_scored":2.2,"avg_conceded":0.9,"win_rate":0.60,"elo":1840,"form":["W","W","D","W","D","W"],"color":"#FDD117"},
+"Argentina":{"league":"International","avg_scored":2.4,"avg_conceded":0.8,"win_rate":0.65,"elo":1930,"form":["W","W","W","D","W","W"],"color":"#74ACDF"},
+"France":{"league":"International","avg_scored":2.1,"avg_conceded":0.8,"win_rate":0.64,"elo":1900,"form":["W","W","D","W","W","D"],"color":"#002395"},
+"England":{"league":"International","avg_scored":2.0,"avg_conceded":0.9,"win_rate":0.60,"elo":1820,"form":["W","D","W","W","D","W"],"color":"#FFFFFF"},
+"Spain":{"league":"International","avg_scored":2.3,"avg_conceded":0.7,"win_rate":0.68,"elo":1890,"form":["W","W","W","W","D","W"],"color":"#AA151B"},
+"Germany":{"league":"International","avg_scored":2.0,"avg_conceded":1.0,"win_rate":0.60,"elo":1830,"form":["W","D","W","W","L","W"],"color":"#000000"},
+"Mexico":{"league":"International","avg_scored":1.7,"avg_conceded":1.1,"win_rate":0.52,"elo":1720,"form":["W","W","D","L","W","D"],"color":"#006847"},
+"USA":{"league":"International","avg_scored":1.6,"avg_conceded":1.2,"win_rate":0.48,"elo":1690,"form":["D","W","W","L","D","W"],"color":"#002868"}
+};
+
+function filterTeams(){let l=document.getElementById('league').value,teams=Object.keys(TEAMS).filter(n=>!l||TEAMS[n].league===l).sort();['home','away'].forEach(id=>{let s=document.getElementById(id),v=s.value;s.innerHTML='<option>-- Select --</option>'+teams.map(n=>`<option ${n===v?'selected':''}>${n}</option>`).join('');if(!teams.includes(v))s.value=''});check()}
+function check(){let h=document.getElementById('home').value,a=document.getElementById('away').value;document.getElementById('btn').disabled=!h||!a||h===a}
+function pct(v){return(v*100).toFixed(1)+'%'}
+function fact(n){return n<=1?1:n*fact(n-1)}
+function poisson(k,l){return Math.pow(l,k)*Math.exp(-l)/fact(k)}
+function eloProbs(eh,ea,neutral){let adj=eh+(neutral?0:100),exp=1/(1+Math.pow(10,(ea-adj)/400)),d=Math.max(.18,Math.min(.32,.30-.001*Math.abs(adj-ea))),r=1-d;return[exp*r,d,(1-exp)*r]}
+function formScore(f){if(!f.length)return.5;let w=0,t=0;for(let i=0;i<f.length;i++){let wt=Math.pow(1.5,f.length-1-i);t+=wt*3;if(f[i]==='W')w+=3*wt;else if(f[i]==='D')w+=wt}return w/t}
+function getProbs(mh,ma){let ph=0,pd=0,pa=0;for(let i=0;i<=8;i++)for(let j=0;j<=8;j++){let p=poisson(i,mh)*poisson(j,ma);if(i>j)ph+=p;else if(i===j)pd+=p;else pa+=p}let t=ph+pd+pa;return[ph/t,pd/t,pa/t]}
+
+async function predict(){let h=document.getElementById('home').value,a=document.getElementById('away').value,n=document.getElementById('neutral').checked;if(!h||!a)return;let th=TEAMS[h],ta=TEAMS[a];document.getElementById('placeholder').style.display='none';document.getElementById('spinner').classList.add('active');
+
+let mh=(th.avg_scored+ta.avg_conceded)/2*(n?1:1.15),ma=(ta.avg_scored+th.avg_conceded)/2;mh=Math.max(.1,mh);ma=Math.max(.1,ma);
+
+let pPoisson=getProbs(mh,ma),pElo=eloProbs(th.elo,ta.elo,n),fh=formScore(th.form),fa=formScore(ta.form),pH2h=[.45,.27,.28];let pH=[th.win_rate*.6+.05,Math.max(.15,.3-th.win_rate-ta.win_rate)*.5,ta.win_rate*.5],t=pH[0]+pH[1]+pH[2];pH=[pH[0]/t,pH[1]/t,pH[2]/t];
+
+let ws=[.35,.25,.20,.10,.10],preds=[pPoisson,pElo,[fh/(fh+fa),1-fh/(fh+fa)*(1-pH2h[1]),fa/(fh+fa)],pH2h,pH];let ph=0,pd=0,pa=0;preds.forEach((p,i)=>{ph+=p[0]*ws[i];pd+=p[1]*ws[i];pa+=p[2]*ws[i]});let tt=ph+pd+pa;ph/=tt;pd/=tt;pa/=tt;
+
+let outcome=ph>pa&&ph>pd?'HOME':pd>pa?'DRAW':'AWAY',outcomeText=outcome==='HOME'?`${h} Win`:outcome==='DRAW'?'Draw':`${a} Win`,outcomeClass=outcome==='HOME'?'outcome-home':outcome==='DRAW'?'outcome-draw':'outcome-away';
+
+let scores=[];for(let i=0;i<=6;i++)for(let j=0;j<=6;j++)scores.push([i,j,poisson(i,mh)*poisson(j,ma)]);scores.sort((a,b)=>b[2]-a[2]);
+
+let modelRows=preds.map((p,i)=>`<div class="model-row"><div class="model-name">Model ${i+1}</div><div class="m-val m-home">${pct(p[0])}</div><div class="m-val m-draw">${pct(p[1])}</div><div class="m-val m-away">${pct(p[2])}</div></div>`).join('');
+
+document.getElementById('spinner').classList.remove('active');document.getElementById('results').innerHTML=`
+<div class="outcome ${outcomeClass}"><strong>${outcomeText}</strong></div>
+<div class="probs">
+<div class="prob-item"><div class="prob-meta"><span>🏠 ${h}</span><span style="color:#3b82f6;font-weight:800">${pct(ph)}</span></div><div class="prob-track"><div class="prob-fill fill-home" style="width:${ph*100}%"></div></div></div>
+<div class="prob-item"><div class="prob-meta"><span>🤝 Draw</span><span style="color:#f59e0b;font-weight:800">${pct(pd)}</span></div><div class="prob-track"><div class="prob-fill fill-draw" style="width:${pd*100}%"></div></div></div>
+<div class="prob-item"><div class="prob-meta"><span>✈️ ${a}</span><span style="color:#ef4444;font-weight:800">${pct(pa)}</span></div><div class="prob-track"><div class="prob-fill fill-away" style="width:${pa*100}%"></div></div></div>
+</div>
+<div class="stats-row">
+<div class="stat-box"><div class="stat-label">xG</div><div class="stat-val">${mh.toFixed(2)}</div></div>
+<div class="stat-box"><div class="stat-label">Result</div><div class="stat-val">${outcomeText.split(' ')[0]}</div></div>
+<div class="stat-box"><div class="stat-label">xG</div><div class="stat-val">${ma.toFixed(2)}</div></div>
+</div>
+<div style="margin-bottom:16px"><div class="section-title">🎯 Top Scorelines</div><div class="scorelines">${scores.slice(0,5).map(s=>`<div class="score-box"><div class="score-num">${s[0]}-${s[1]}</div><div class="score-pct">${(s[2]*100).toFixed(1)}%</div></div>`).join('')}</div></div>
+<div><div class="section-title">🔬 Model Predictions</div><div class="models-grid"><div class="model-row" style="background:#1e293b;color:#fff;font-weight:700"><div>Model</div><div style="text-align:center;color:#93c5fd">Home</div><div style="text-align:center;color:#fde68a">Draw</div><div style="text-align:center;color:#fca5a5">Away</div></div>${modelRows}</div></div>`;document.getElementById('results').style.display='block'}filterTeams();</script></body></html>
