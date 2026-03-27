@@ -5,861 +5,517 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>⚽ Football Prediction Bot</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        *{margin:0;padding:0;box-sizing:border-box}
+        :root{
+            --primary:#2563eb;--success:#10b981;--warn:#f59e0b;
+            --danger:#ef4444;--dark:#1e293b;--light:#f8fafc;
+            --border:#e2e8f0;--card:#ffffff;--muted:#64748b;
         }
-
-        :root {
-            --primary: #0066cc;
-            --success: #10b981;
-            --warning: #f59e0b;
-            --danger: #ef4444;
-            --neutral: #fbbf24;
-            --dark: #1f2937;
-            --light: #f9fafb;
-            --border: #e5e7eb;
+        body{
+            font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+            background:linear-gradient(135deg,#1e3a5f 0%,#0f172a 100%);
+            min-height:100vh;padding:20px;color:var(--dark);
         }
+        .container{max-width:1300px;margin:0 auto}
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-            color: var(--dark);
-        }
+        /* Header */
+        header{text-align:center;color:#fff;margin-bottom:28px}
+        header h1{font-size:2.4em;letter-spacing:-0.5px;margin-bottom:6px}
+        header p{opacity:.8;font-size:1.05em}
+        .subtitle-badges{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:10px}
+        .badge{background:rgba(255,255,255,0.15);color:#fff;padding:4px 12px;
+               border-radius:20px;font-size:.8em;font-weight:600}
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
+        /* Layout */
+        .grid{display:grid;grid-template-columns:420px 1fr;gap:20px}
+        @media(max-width:1024px){.grid{grid-template-columns:1fr}}
 
-        header {
-            text-align: center;
-            color: white;
-            margin-bottom: 30px;
-        }
+        .card{background:var(--card);border-radius:16px;padding:24px;
+              box-shadow:0 4px 20px rgba(0,0,0,.12)}
+        .card-title{font-size:1.25em;font-weight:700;margin-bottom:20px;
+                    color:var(--dark);display:flex;align-items:center;gap:8px}
 
-        header h1 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
+        /* Form elements */
+        .form-group{margin-bottom:14px}
+        label{display:block;font-weight:600;font-size:.9em;margin-bottom:5px;color:var(--muted)}
+        select,input[type=text]{width:100%;padding:10px 14px;border:1.5px solid var(--border);
+            border-radius:8px;font-size:1em;transition:border .2s}
+        select:focus,input:focus{outline:none;border-color:var(--primary)}
+        .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+        .checkbox-row{display:flex;align-items:center;gap:8px;font-size:.95em;font-weight:600}
+        .checkbox-row input{width:auto}
 
-        header p {
-            font-size: 1.1em;
-            opacity: 0.95;
-        }
+        /* Team select with color dot */
+        .team-select-wrap{position:relative}
+        .team-dot{width:14px;height:14px;border-radius:50%;position:absolute;
+                  left:12px;top:50%;transform:translateY(-50%);border:2px solid #ddd}
+        .team-select-wrap select{padding-left:34px}
 
-        .content {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-bottom: 20px;
-        }
+        /* Buttons */
+        .btn{padding:12px 24px;border:none;border-radius:8px;font-size:1em;
+             font-weight:700;cursor:pointer;transition:all .2s}
+        .btn-primary{background:var(--primary);color:#fff;width:100%}
+        .btn-primary:hover{background:#1d4ed8;transform:translateY(-1px);
+                            box-shadow:0 4px 12px rgba(37,99,235,.4)}
+        .btn-primary:disabled{background:#94a3b8;cursor:not-allowed;transform:none}
 
-        @media (max-width: 1024px) {
-            .content {
-                grid-template-columns: 1fr;
-            }
-        }
+        /* Result area */
+        #placeholder{text-align:center;padding:60px 20px;color:var(--muted)}
+        #placeholder .icon{font-size:4em;margin-bottom:16px}
 
-        .card {
-            background: white;
-            border-radius: 12px;
-            padding: 25px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
+        /* Outcome banner */
+        .outcome-banner{border-radius:12px;padding:20px;text-align:center;margin-bottom:20px}
+        .outcome-banner.home{background:linear-gradient(135deg,#dbeafe,#bfdbfe)}
+        .outcome-banner.draw{background:linear-gradient(135deg,#fef9c3,#fde68a)}
+        .outcome-banner.away{background:linear-gradient(135deg,#fee2e2,#fecaca)}
+        .outcome-label{font-size:.85em;font-weight:700;text-transform:uppercase;
+                       letter-spacing:1px;opacity:.7;margin-bottom:6px}
+        .outcome-result{font-size:1.8em;font-weight:800;color:var(--dark)}
+        .outcome-conf{font-size:.9em;margin-top:6px;opacity:.7}
 
-        .card h2 {
-            margin-bottom: 20px;
-            color: var(--dark);
-            font-size: 1.5em;
-            border-bottom: 2px solid var(--primary);
-            padding-bottom: 10px;
-        }
+        /* Probability bars */
+        .probs{margin-bottom:20px}
+        .prob-item{margin-bottom:14px}
+        .prob-meta{display:flex;justify-content:space-between;
+                   font-weight:600;font-size:.95em;margin-bottom:5px}
+        .prob-track{height:28px;background:#f1f5f9;border-radius:6px;overflow:hidden}
+        .prob-fill{height:100%;border-radius:6px;display:flex;align-items:center;
+                   justify-content:flex-end;padding-right:10px;color:#fff;
+                   font-weight:700;font-size:.85em;transition:width .6s cubic-bezier(.4,0,.2,1)}
+        .fill-home{background:linear-gradient(90deg,#3b82f6,#1d4ed8)}
+        .fill-draw{background:linear-gradient(90deg,#f59e0b,#d97706)}
+        .fill-away{background:linear-gradient(90deg,#ef4444,#b91c1c)}
 
-        .form-group {
-            margin-bottom: 15px;
-        }
+        /* Stats row */
+        .stats-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:20px}
+        .stat-box{background:#f8fafc;border-radius:10px;padding:14px;text-align:center}
+        .stat-label{font-size:.8em;color:var(--muted);font-weight:600;text-transform:uppercase;margin-bottom:4px}
+        .stat-val{font-size:1.7em;font-weight:800;color:var(--dark)}
+        .stat-sub{font-size:.75em;color:var(--muted);margin-top:2px}
 
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 600;
-            color: var(--dark);
-        }
+        /* Scorelines */
+        .section-title{font-weight:700;font-size:1em;margin-bottom:12px;
+                        display:flex;align-items:center;gap:6px}
+        .scorelines{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:20px}
+        .score-box{background:#f8fafc;border-radius:8px;padding:10px;text-align:center}
+        .score-num{font-size:1.3em;font-weight:800;color:var(--primary)}
+        .score-pct{font-size:.75em;color:var(--muted);margin-top:2px}
 
-        input, select, textarea {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            font-size: 1em;
-        }
+        /* Models table */
+        .models-grid{display:grid;gap:8px;margin-bottom:20px}
+        .model-row{display:grid;grid-template-columns:100px 1fr 1fr 1fr;
+                   gap:8px;align-items:center;background:#f8fafc;
+                   border-radius:8px;padding:10px 14px;font-size:.9em}
+        .model-row.header{background:#1e293b;color:#fff;font-weight:700;font-size:.8em}
+        .model-name{font-weight:700;color:var(--dark)}
+        .m-val{text-align:center;font-weight:600}
+        .m-home{color:#3b82f6}.m-draw{color:#f59e0b}.m-away{color:#ef4444}
 
-        input:focus, select:focus, textarea:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
-        }
+        /* Form pills */
+        .form-row-display{display:flex;gap:6px;align-items:center;margin-bottom:6px}
+        .form-pill{width:28px;height:28px;border-radius:50%;display:flex;
+                   align-items:center;justify-content:center;font-weight:800;
+                   font-size:.75em;color:#fff}
+        .fp-W{background:#10b981}.fp-D{background:#f59e0b}.fp-L{background:#ef4444}
+        .form-label{font-size:.85em;font-weight:600;color:var(--muted);min-width:130px}
 
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-        }
+        /* Team info strip */
+        .team-strip{display:grid;grid-template-columns:1fr auto 1fr;
+                    align-items:center;background:#f8fafc;border-radius:10px;
+                    padding:14px 18px;margin-bottom:20px}
+        .team-name-left{font-weight:800;font-size:1em}
+        .team-name-right{font-weight:800;font-size:1em;text-align:right}
+        .vs-badge{background:#1e293b;color:#fff;padding:4px 12px;
+                  border-radius:20px;font-weight:800;font-size:.85em}
+        .elo-badge{font-size:.8em;color:var(--muted)}
 
-        .button-group {
-            display: flex;
-            gap: 10px;
-            margin-top: 20px;
-        }
+        /* H2H mini */
+        .h2h-bar{display:flex;height:20px;border-radius:6px;overflow:hidden;margin:8px 0}
+        .h2h-home{background:#3b82f6}
+        .h2h-draw{background:#94a3b8}
+        .h2h-away{background:#ef4444}
+        .h2h-labels{display:grid;grid-template-columns:1fr 1fr 1fr;font-size:.8em;font-weight:600;text-align:center}
 
-        button {
-            flex: 1;
-            padding: 12px 20px;
-            border: none;
-            border-radius: 6px;
-            font-size: 1em;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
+        /* Spinner */
+        .spinner{display:none;text-align:center;padding:40px 20px}
+        .spinner.active{display:block}
+        .spin{width:40px;height:40px;border:4px solid #e2e8f0;
+              border-top-color:var(--primary);border-radius:50%;
+              animation:spin .8s linear infinite;margin:0 auto 12px}
+        @keyframes spin{to{transform:rotate(360deg)}}
 
-        .btn-primary {
-            background: var(--primary);
-            color: white;
-        }
+        /* Error */
+        .error-box{background:#fee2e2;color:#991b1b;padding:14px;
+                   border-radius:8px;margin-bottom:16px;font-weight:600}
 
-        .btn-primary:hover {
-            background: #0052a3;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 102, 204, 0.3);
-        }
-
-        .btn-secondary {
-            background: var(--border);
-            color: var(--dark);
-        }
-
-        .btn-secondary:hover {
-            background: #d1d5db;
-        }
-
-        .result-section {
-            display: none;
-        }
-
-        .result-section.active {
-            display: block;
-        }
-
-        .probs {
-            margin-top: 30px;
-        }
-
-        .prob-item {
-            margin-bottom: 25px;
-        }
-
-        .prob-label {
-            display: flex;
-            justify-content: space-between;
-            font-weight: 600;
-            margin-bottom: 8px;
-        }
-
-        .prob-bar {
-            width: 100%;
-            height: 30px;
-            background: var(--border);
-            border-radius: 6px;
-            overflow: hidden;
-            position: relative;
-        }
-
-        .prob-fill {
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: flex-end;
-            padding-right: 10px;
-            color: white;
-            font-weight: bold;
-            font-size: 0.9em;
-            transition: width 0.5s ease;
-        }
-
-        .prob-home { background: linear-gradient(90deg, #3b82f6, #1d4ed8); }
-        .prob-draw { background: linear-gradient(90deg, #fbbf24, #f59e0b); }
-        .prob-away { background: linear-gradient(90deg, #ef4444, #991b1b); }
-
-        .outcome {
-            background: var(--light);
-            padding: 20px;
-            border-radius: 8px;
-            text-align: center;
-            margin: 20px 0;
-            border-left: 5px solid var(--primary);
-        }
-
-        .outcome-title {
-            font-size: 0.9em;
-            color: #666;
-            text-transform: uppercase;
-            margin-bottom: 10px;
-        }
-
-        .outcome-result {
-            font-size: 1.8em;
-            font-weight: bold;
-            color: var(--primary);
-        }
-
-        .scorelines {
-            background: var(--light);
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 20px;
-        }
-
-        .scorelines h3 {
-            margin-bottom: 15px;
-            color: var(--dark);
-        }
-
-        .scoreline-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px;
-            background: white;
-            border-radius: 6px;
-            margin-bottom: 8px;
-        }
-
-        .scoreline-score {
-            font-weight: bold;
-            font-size: 1.2em;
-            color: var(--primary);
-        }
-
-        .scoreline-prob {
-            background: var(--primary);
-            color: white;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.85em;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-top: 20px;
-        }
-
-        .stat-card {
-            background: var(--light);
-            padding: 15px;
-            border-radius: 8px;
-            text-align: center;
-        }
-
-        .stat-label {
-            font-size: 0.85em;
-            color: #666;
-            text-transform: uppercase;
-            margin-bottom: 5px;
-        }
-
-        .stat-value {
-            font-size: 1.8em;
-            font-weight: bold;
-            color: var(--primary);
-        }
-
-        .models {
-            margin-top: 30px;
-            background: var(--light);
-            padding: 20px;
-            border-radius: 8px;
-        }
-
-        .models h3 {
-            margin-bottom: 15px;
-            color: var(--dark);
-        }
-
-        .model-row {
-            display: grid;
-            grid-template-columns: 120px 1fr 1fr 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 10px;
-            padding: 10px;
-            background: white;
-            border-radius: 6px;
-            font-size: 0.9em;
-        }
-
-        .model-row div {
-            text-align: center;
-        }
-
-        .model-row div:first-child {
-            text-align: left;
-            font-weight: bold;
-        }
-
-        .confidence {
-            margin-top: 20px;
-            padding: 15px;
-            background: var(--light);
-            border-radius: 8px;
-            border-left: 5px solid var(--success);
-        }
-
-        .confidence-label {
-            font-size: 0.9em;
-            color: #666;
-            margin-bottom: 8px;
-        }
-
-        .confidence-value {
-            font-size: 1.5em;
-            font-weight: bold;
-            color: var(--success);
-        }
-
-        .error {
-            background: #fee;
-            color: #c00;
-            padding: 15px;
-            border-radius: 6px;
-            margin-bottom: 15px;
-            border-left: 5px solid var(--danger);
-        }
-
-        .footer {
-            text-align: center;
-            color: white;
-            margin-top: 40px;
-            font-size: 0.9em;
-        }
-
-        .form-tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            border-bottom: 2px solid var(--border);
-        }
-
-        .tab-btn {
-            padding: 10px 15px;
-            background: none;
-            border: none;
-            border-bottom: 3px solid transparent;
-            color: #666;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .tab-btn.active {
-            color: var(--primary);
-            border-bottom-color: var(--primary);
-        }
-
-        .form-section {
-            display: none;
-        }
-
-        .form-section.active {
-            display: block;
-        }
+        /* Loading overlay on select */
+        .loading-select{opacity:.6;pointer-events:none}
     </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>⚽ Football Prediction Bot</h1>
-            <p>Powered by Poisson, Elo, Form & Head-to-Head Analysis</p>
-        </header>
+<div class="container">
+    <header>
+        <h1>⚽ Football Prediction Bot</h1>
+        <p>AI-powered match analysis using real team data</p>
+        <div class="subtitle-badges">
+            <span class="badge">📊 Poisson Model</span>
+            <span class="badge">⚡ Elo Ratings</span>
+            <span class="badge">📈 Form Analysis</span>
+            <span class="badge">⚔ Head-to-Head</span>
+            <span class="badge">🏟 Home Advantage</span>
+        </div>
+    </header>
 
-        <div class="content">
-            <!-- Input Panel -->
-            <div class="card">
-                <h2>Match Details</h2>
+    <div class="grid">
+        <!-- LEFT: Input -->
+        <div class="card">
+            <div class="card-title">🎯 Match Setup</div>
 
-                <div class="form-tabs">
-                    <button class="tab-btn active" onclick="switchTab('basic')">Quick Predict</button>
-                    <button class="tab-btn" onclick="switchTab('advanced')">Advanced</button>
-                </div>
+            <div class="form-group">
+                <label>🏆 Competition / Filter</label>
+                <select id="leagueFilter" onchange="filterTeams()">
+                    <option value="">All Competitions</option>
+                    <option value="Premier League">🏴󠁧󠁢󠁥󠁮󠁧󠁿 Premier League</option>
+                    <option value="La Liga">🇪🇸 La Liga</option>
+                    <option value="Bundesliga">🇩🇪 Bundesliga</option>
+                    <option value="Serie A">🇮🇹 Serie A</option>
+                    <option value="Ligue 1">🇫🇷 Ligue 1</option>
+                    <option value="International">🌍 National Teams</option>
+                    <option value="Primeira Liga">🇵🇹 Primeira Liga</option>
+                    <option value="Eredivisie">🇳🇱 Eredivisie</option>
+                </select>
+            </div>
 
-                <!-- Basic Tab -->
-                <div id="basic" class="form-section active">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>🏠 Home Team</label>
-                            <input type="text" id="homeTeam" placeholder="e.g. Manchester City" value="Manchester City">
-                        </div>
-                        <div class="form-group">
-                            <label>🏃 Away Team</label>
-                            <input type="text" id="awayTeam" placeholder="e.g. Liverpool" value="Liverpool">
-                        </div>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Home Avg Goals/Game</label>
-                            <input type="number" id="homeAvgScored" step="0.1" value="1.8" min="0" max="5">
-                        </div>
-                        <div class="form-group">
-                            <label>Home Avg Conceded/Game</label>
-                            <input type="number" id="homeAvgConceded" step="0.1" value="0.8" min="0" max="5">
-                        </div>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Away Avg Goals/Game</label>
-                            <input type="number" id="awayAvgScored" step="0.1" value="1.5" min="0" max="5">
-                        </div>
-                        <div class="form-group">
-                            <label>Away Avg Conceded/Game</label>
-                            <input type="number" id="awayAvgConceded" step="0.1" value="1.2" min="0" max="5">
-                        </div>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Home Win Rate (0-1)</label>
-                            <input type="number" id="homeWinRate" step="0.05" value="0.55" min="0" max="1">
-                        </div>
-                        <div class="form-group">
-                            <label>Away Win Rate (0-1)</label>
-                            <input type="number" id="awayWinRate" step="0.05" value="0.35" min="0" max="1">
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Home Recent Form (W/D/L)</label>
-                        <input type="text" id="homeForm" placeholder="W W D L W W" value="W W W D W L">
-                    </div>
-
-                    <div class="form-group">
-                        <label>Away Recent Form (W/D/L)</label>
-                        <input type="text" id="awayForm" placeholder="L D W D L D" value="L D W D L D">
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>
-                                <input type="checkbox" id="neutralVenue"> Neutral Venue?
-                            </label>
-                        </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>🏠 Home Team</label>
+                    <div class="team-select-wrap">
+                        <div class="team-dot" id="homeDot"></div>
+                        <select id="homeTeam" onchange="onTeamChange()">
+                            <option value="">Loading teams...</option>
+                        </select>
                     </div>
                 </div>
-
-                <!-- Advanced Tab -->
-                <div id="advanced" class="form-section">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Home Elo Rating</label>
-                            <input type="number" id="homeElo" value="1650" min="1000" max="2500">
-                        </div>
-                        <div class="form-group">
-                            <label>Away Elo Rating</label>
-                            <input type="number" id="awayElo" value="1550" min="1000" max="2500">
-                        </div>
+                <div class="form-group">
+                    <label>✈️ Away Team</label>
+                    <div class="team-select-wrap">
+                        <div class="team-dot" id="awayDot"></div>
+                        <select id="awayTeam" onchange="onTeamChange()">
+                            <option value="">Loading teams...</option>
+                        </select>
                     </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>H2H Home Wins</label>
-                            <input type="number" id="h2hHomeWins" value="5" min="0" max="50">
-                        </div>
-                        <div class="form-group">
-                            <label>H2H Draws</label>
-                            <input type="number" id="h2hDraws" value="4" min="0" max="50">
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label>H2H Away Wins</label>
-                        <input type="number" id="h2hAwayWins" value="3" min="0" max="50">
-                    </div>
-                </div>
-
-                <div class="button-group">
-                    <button class="btn-primary" onclick="predict()">🔮 Predict Match</button>
-                    <button class="btn-secondary" onclick="resetForm()">Reset</button>
                 </div>
             </div>
 
-            <!-- Result Panel -->
-            <div class="card">
-                <h2>Prediction Results</h2>
-                <div id="noResults" style="text-align: center; color: #999; padding: 30px;">
-                    <p style="font-size: 1.2em;">Enter match details and click "Predict" to see results</p>
-                </div>
+            <div class="form-group">
+                <label class="checkbox-row">
+                    <input type="checkbox" id="neutralVenue" onchange="onTeamChange()">
+                    🏟️ Neutral Venue (remove home advantage)
+                </label>
+            </div>
 
-                <div id="resultsPanel" class="result-section">
-                    <div id="errorMsg" class="error" style="display: none;"></div>
+            <button class="btn btn-primary" id="predictBtn" onclick="predict()" disabled>
+                🔮 Calculate Prediction
+            </button>
 
-                    <div class="outcome">
-                        <div class="outcome-title">Likely Outcome</div>
-                        <div class="outcome-result" id="outcomeText">—</div>
-                    </div>
-
-                    <div class="probs">
-                        <div class="prob-item">
-                            <div class="prob-label">
-                                <span id="homeLabel">Team</span>
-                                <span id="homeProb">0%</span>
-                            </div>
-                            <div class="prob-bar">
-                                <div class="prob-fill prob-home" id="homeBar" style="width: 0%">
-                                    <span id="homePercent"></span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="prob-item">
-                            <div class="prob-label">
-                                <span>Draw</span>
-                                <span id="drawProb">0%</span>
-                            </div>
-                            <div class="prob-bar">
-                                <div class="prob-fill prob-draw" id="drawBar" style="width: 0%">
-                                    <span id="drawPercent"></span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="prob-item">
-                            <div class="prob-label">
-                                <span id="awayLabel">Team</span>
-                                <span id="awayProb">0%</span>
-                            </div>
-                            <div class="prob-bar">
-                                <div class="prob-fill prob-away" id="awayBar" style="width: 0%">
-                                    <span id="awayPercent"></span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="stats-grid">
-                        <div class="stat-card">
-                            <div class="stat-label">Expected Goals (Home)</div>
-                            <div class="stat-value" id="xgHome">—</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-label">Expected Goals (Away)</div>
-                            <div class="stat-value" id="xgAway">—</div>
-                        </div>
-                    </div>
-
-                    <div class="scorelines">
-                        <h3>🎯 Most Likely Scorelines</h3>
-                        <div id="scorelinesList"></div>
-                    </div>
-
-                    <div class="confidence">
-                        <div class="confidence-label">Model Agreement Confidence</div>
-                        <div class="confidence-value" id="confidenceValue">—</div>
-                    </div>
-
-                    <div class="models">
-                        <h3>🔬 Individual Model Predictions</h3>
-                        <div class="model-row" style="font-weight: bold; background: #e8effc;">
-                            <div>Model</div>
-                            <div>Home Win</div>
-                            <div>Draw</div>
-                            <div>Away Win</div>
-                            <div>Notes</div>
-                        </div>
-                        <div id="modelsTable"></div>
-                    </div>
-                </div>
+            <!-- Team stat preview -->
+            <div id="teamPreview" style="display:none;margin-top:20px">
+                <div class="section-title">📋 Team Stats Preview</div>
+                <div id="previewContent"></div>
             </div>
         </div>
 
-        <div class="footer">
-            <p>⚽ Football Prediction Bot — Ensemble of Poisson, Elo, Form, H2H & Home/Away Models</p>
-            <p>For entertainment & educational purposes. Not a substitute for professional analysis.</p>
+        <!-- RIGHT: Results -->
+        <div class="card">
+            <div class="card-title">📊 Prediction Results</div>
+
+            <div id="placeholder">
+                <div class="icon">⚽</div>
+                <p style="font-size:1.1em;font-weight:600">Select two teams and click<br><strong>Calculate Prediction</strong></p>
+                <p style="margin-top:8px;font-size:.9em">Data covers 60+ clubs and national teams</p>
+            </div>
+
+            <div class="spinner" id="spinner">
+                <div class="spin"></div>
+                <p style="font-weight:600">Calculating probabilities...</p>
+            </div>
+
+            <div id="resultsArea" style="display:none"></div>
         </div>
     </div>
+</div>
 
-    <script>
-        // Poisson distribution
-        function poisson(lambda, k) {
-            if (k < 0) return 0;
-            let sum = 0;
-            for (let i = 0; i <= k; i++) {
-                sum += Math.pow(lambda, i) / factorial(i);
-            }
-            return Math.pow(Math.E, -lambda) * sum;
-        }
+<script>
+const API = ""; // same origin
+let ALL_TEAMS = {};
+let filtered = {};
 
-        function factorial(n) {
-            if (n <= 1) return 1;
-            return n * factorial(n - 1);
-        }
+async function loadTeams() {
+    try {
+        const r = await fetch(API + "/api/teams");
+        ALL_TEAMS = await r.json();
+        filterTeams();
+    } catch(e) {
+        console.error("Failed to load teams:", e);
+        document.getElementById("homeTeam").innerHTML = '<option value="">⚠ Server offline</option>';
+    }
+}
 
-        // Expected score (Elo)
-        function expectedScore(eloA, eloB, homeAdv = true) {
-            const adjEloA = eloA + (homeAdv ? 100 : 0);
-            return 1.0 / (1.0 + Math.pow(10, (eloB - adjEloA) / 400));
-        }
+function filterTeams() {
+    const league = document.getElementById("leagueFilter").value;
+    filtered = league
+        ? Object.fromEntries(Object.entries(ALL_TEAMS).filter(([,v]) => v.league === league))
+        : ALL_TEAMS;
+    populateSelect("homeTeam", filtered);
+    populateSelect("awayTeam", filtered);
+    updateDots();
+}
 
-        // Elo to probabilities
-        function eloToProbs(eloHome, eloAway, neutral = false) {
-            const expHome = expectedScore(eloHome, eloAway, !neutral);
-            let pDraw = Math.max(0.18, 0.30 - 0.001 * Math.abs((eloHome + (neutral ? 0 : 100)) - eloAway));
-            pDraw = Math.min(pDraw, 0.32);
-            const remaining = 1 - pDraw;
-            const pHome = expHome * remaining;
-            const pAway = (1 - expHome) * remaining;
-            return [pHome, pDraw, pAway];
-        }
+function populateSelect(id, teams) {
+    const sel = document.getElementById(id);
+    const cur = sel.value;
+    const sorted = Object.keys(teams).sort();
+    sel.innerHTML = '<option value="">-- Select Team --</option>'
+        + sorted.map(n => `<option value="${n}" ${n===cur?'selected':''}>${n}</option>`).join('');
+    if (!sorted.includes(cur)) sel.value = "";
+    updateDots();
+    checkReady();
+}
 
-        // Form analysis
-        function computeFormScore(results) {
-            if (!results.length) return 0.5;
-            let weighted = 0, total = 0;
-            for (let i = 0; i < results.length; i++) {
-                const w = Math.pow(1.5, results.length - 1 - i);
-                total += w * 3;
-                if (results[i] === 'W') weighted += 3 * w;
-                else if (results[i] === 'D') weighted += 1 * w;
-            }
-            return weighted / total;
-        }
+function onTeamChange() {
+    updateDots();
+    checkReady();
+    showPreview();
+}
 
-        function formToProbs(formHome, formAway) {
-            const total = formHome + formAway;
-            if (total === 0) return [0.38, 0.24, 0.38];
-            const ratioH = formHome / total;
-            const ratioA = formAway / total;
-            let pDraw = Math.max(0.15, 0.30 - Math.abs(ratioH - ratioA) * 0.4);
-            pDraw = Math.min(pDraw, 0.32);
-            const remaining = 1 - pDraw;
-            return [ratioH * remaining, pDraw, ratioA * remaining];
-        }
+function updateDots() {
+    ['home','away'].forEach(side => {
+        const sel = document.getElementById(side+'Team');
+        const dot = document.getElementById(side+'Dot');
+        const team = ALL_TEAMS[sel.value];
+        dot.style.background = team ? (team.color||'#ddd') : '#ddd';
+        dot.style.borderColor = team ? (team.color||'#ddd') : '#ddd';
+    });
+}
 
-        // Poisson goals
-        function poissonGoals(homeAvgScored, homeAvgConceded, awayAvgScored, awayAvgConceded) {
-            const muHome = (homeAvgScored + awayAvgConceded) / 2 * 1.15; // Home advantage
-            const muAway = (awayAvgScored + homeAvgConceded) / 2;
-            return [Math.max(0.1, muHome), Math.max(0.1, muAway)];
-        }
+function checkReady() {
+    const h = document.getElementById("homeTeam").value;
+    const a = document.getElementById("awayTeam").value;
+    const btn = document.getElementById("predictBtn");
+    btn.disabled = !h || !a || h === a;
+    btn.textContent = h && a && h !== a ? "🔮 Calculate Prediction" : "← Select two different teams";
+}
 
-        // Compute scoreline probabilities
-        function scoreProbability(homeGoals, awayGoals, muH, muA) {
-            const pHome = poisson(muH, homeGoals);
-            const pAway = poisson(muA, awayGoals);
-            // Simple approximation without Dixon-Coles correction
-            return pHome * pAway;
-        }
+function showPreview() {
+    const h = document.getElementById("homeTeam").value;
+    const a = document.getElementById("awayTeam").value;
+    const wrap = document.getElementById("teamPreview");
+    if (!h || !a || h === a) { wrap.style.display = 'none'; return; }
+    const th = ALL_TEAMS[h], ta = ALL_TEAMS[a];
+    if (!th || !ta) { wrap.style.display = 'none'; return; }
 
-        function getWinProbs(muH, muA) {
-            let pHomeWin = 0, pDraw = 0, pAwayWin = 0;
-            for (let i = 0; i <= 8; i++) {
-                for (let j = 0; j <= 8; j++) {
-                    const p = scoreProbability(i, j, muH, muA);
-                    if (i > j) pHomeWin += p;
-                    else if (i === j) pDraw += p;
-                    else pAwayWin += p;
-                }
-            }
-            const total = pHomeWin + pDraw + pAwayWin;
-            return [pHomeWin / total, pDraw / total, pAwayWin / total];
-        }
+    const formPills = (form) => form.map(r =>
+        `<div class="form-pill fp-${r}">${r}</div>`).join('');
 
-        function topScorelines(muH, muA) {
-            const scores = [];
-            for (let i = 0; i <= 6; i++) {
-                for (let j = 0; j <= 6; j++) {
-                    scores.push({
-                        score: `${i}-${j}`,
-                        prob: scoreProbability(i, j, muH, muA)
-                    });
-                }
-            }
-            return scores.sort((a, b) => b.prob - a.prob).slice(0, 5);
-        }
+    document.getElementById("previewContent").innerHTML = `
+        <div style="font-size:.85em">
+            <div class="form-row-display">
+                <span class="form-label">🏠 ${h}:</span>
+                ${formPills(th.form)}
+                <span style="margin-left:4px;color:#64748b">Elo: ${th.elo}</span>
+            </div>
+            <div class="form-row-display">
+                <span class="form-label">✈️ ${a}:</span>
+                ${formPills(ta.form)}
+                <span style="margin-left:4px;color:#64748b">Elo: ${ta.elo}</span>
+            </div>
+        </div>`;
+    wrap.style.display = 'block';
+}
 
-        // Parse form string
-        function parseForm(formStr) {
-            return formStr.split(/\s+/).filter(r => /[WDL]/.test(r));
-        }
+async function predict() {
+    const home = document.getElementById("homeTeam").value;
+    const away = document.getElementById("awayTeam").value;
+    const neutral = document.getElementById("neutralVenue").checked;
+    if (!home || !away) return;
 
-        // Main prediction
-        function predict() {
-            const homeTeam = document.getElementById('homeTeam').value || 'Home';
-            const awayTeam = document.getElementById('awayTeam').value || 'Away';
-            const homeAvgScored = parseFloat(document.getElementById('homeAvgScored').value);
-            const homeAvgConceded = parseFloat(document.getElementById('homeAvgConceded').value);
-            const awayAvgScored = parseFloat(document.getElementById('awayAvgScored').value);
-            const awayAvgConceded = parseFloat(document.getElementById('awayAvgConceded').value);
-            const homeWinRate = parseFloat(document.getElementById('homeWinRate').value);
-            const awayWinRate = parseFloat(document.getElementById('awayWinRate').value);
-            const homeForm = parseForm(document.getElementById('homeForm').value);
-            const awayForm = parseForm(document.getElementById('awayForm').value);
-            const neutralVenue = document.getElementById('neutralVenue').checked;
-            const homeElo = parseFloat(document.getElementById('homeElo').value);
-            const awayElo = parseFloat(document.getElementById('awayElo').value);
-            const h2hHomeWins = parseInt(document.getElementById('h2hHomeWins').value);
-            const h2hDraws = parseInt(document.getElementById('h2hDraws').value);
-            const h2hAwayWins = parseInt(document.getElementById('h2hAwayWins').value);
+    document.getElementById("placeholder").style.display = 'none';
+    document.getElementById("resultsArea").style.display = 'none';
+    document.getElementById("spinner").classList.add('active');
+    document.getElementById("predictBtn").disabled = true;
 
-            // 1. Poisson
-            const [muH, muA] = poissonGoals(homeAvgScored, homeAvgConceded, awayAvgScored, awayAvgConceded);
-            let pPoisson = getWinProbs(muH, muA);
+    try {
+        const r = await fetch(API + "/api/predict", {
+            method: "POST",
+            headers: {"Content-Type":"application/json"},
+            body: JSON.stringify({home, away, neutral})
+        });
+        const data = await r.json();
+        if (data.error) throw new Error(data.error);
+        renderResults(data, home, away);
+    } catch(e) {
+        document.getElementById("resultsArea").innerHTML = `<div class="error-box">⚠ ${e.message}</div>`;
+        document.getElementById("resultsArea").style.display = 'block';
+    } finally {
+        document.getElementById("spinner").classList.remove('active');
+        document.getElementById("predictBtn").disabled = false;
+    }
+}
 
-            // 2. Elo
-            let pElo = eloToProbs(homeElo, awayElo, neutralVenue);
+function pct(v){ return (v*100).toFixed(1)+'%'; }
 
-            // 3. Form
-            const formHomeScore = computeFormScore(homeForm);
-            const formAwayScore = computeFormScore(awayForm);
-            let pForm = formToProbs(formHomeScore, formAwayScore);
+function renderResults(d, home, away) {
+    const oClass = d.likely_outcome === 'HOME_WIN' ? 'home' : d.likely_outcome === 'DRAW' ? 'draw' : 'away';
+    const oText  = d.likely_outcome === 'HOME_WIN' ? `🏠 ${home} Win`
+                 : d.likely_outcome === 'DRAW' ? '🤝 Draw'
+                 : `✈️ ${away} Win`;
+    const confColor = d.confidence >= 0.7 ? '#10b981' : d.confidence >= 0.5 ? '#f59e0b' : '#ef4444';
+    const th = d.team_info.home, ta = d.team_info.away;
 
-            // 4. H2H
-            const h2hTotal = h2hHomeWins + h2hDraws + h2hAwayWins;
-            let pH2h = h2hTotal > 0
-                ? [h2hHomeWins / h2hTotal, h2hDraws / h2hTotal, h2hAwayWins / h2hTotal]
-                : [0.45, 0.27, 0.28];
+    // Scorelines
+    const scoresHTML = (d.top_scorelines||[]).map(s => `
+        <div class="score-box">
+            <div class="score-num">${s.score}</div>
+            <div class="score-pct">${s.prob}%</div>
+        </div>`).join('');
 
-            // 5. Home/Away advantage
-            let pHA = [homeWinRate * 0.6 + 0.05, 0.25, awayWinRate * 0.5];
-            const sum = pHA[0] + pHA[1] + pHA[2];
-            pHA = [pHA[0] / sum, pHA[1] / sum, pHA[2] / sum];
+    // Form pills
+    const formPills = (form) => (form||[]).map(r =>
+        `<div class="form-pill fp-${r}">${r}</div>`).join('');
 
-            // Ensemble
-            const weights = [0.35, 0.25, 0.20, 0.10, 0.10];
-            const predictions = [pPoisson, pElo, pForm, pH2h, pHA];
-            const totalW = weights.reduce((a, b) => a + b, 0);
+    // Models
+    const models = d.models || {};
+    const modelRows = Object.entries(models).map(([name, m]) => `
+        <div class="model-row">
+            <div class="model-name">${name}</div>
+            <div class="m-val m-home">${pct(m.home)}</div>
+            <div class="m-val m-draw">${pct(m.draw)}</div>
+            <div class="m-val m-away">${pct(m.away)}</div>
+        </div>`).join('');
 
-            let pHome = 0, pDraw = 0, pAway = 0;
-            for (let i = 0; i < predictions.length; i++) {
-                pHome += predictions[i][0] * weights[i];
-                pDraw += predictions[i][1] * weights[i];
-                pAway += predictions[i][2] * weights[i];
-            }
-            const total = pHome + pDraw + pAway;
-            pHome /= total;
-            pDraw /= total;
-            pAway /= total;
+    // H2H
+    const h2h = (models.H2H||{}).data;
+    let h2hHTML = '<p style="color:#64748b;font-size:.9em">No historical H2H data available</p>';
+    if (h2h && h2h.total > 0) {
+        const tot = h2h.total;
+        const hw_pct = (h2h.home_wins/tot*100).toFixed(0);
+        const dr_pct = (h2h.draws/tot*100).toFixed(0);
+        const aw_pct = (h2h.away_wins/tot*100).toFixed(0);
+        h2hHTML = `
+            <div style="font-size:.9em;margin-bottom:8px">
+                <span style="color:#3b82f6;font-weight:700">${home}: ${h2h.home_wins}W</span> &nbsp;
+                <span style="color:#94a3b8;font-weight:700">${h2h.draws}D</span> &nbsp;
+                <span style="color:#ef4444;font-weight:700">${h2h.away_wins}W :${away}</span>
+                <span style="color:#64748b"> (${tot} games)</span>
+            </div>
+            <div class="h2h-bar">
+                <div class="h2h-home" style="width:${hw_pct}%"></div>
+                <div class="h2h-draw" style="width:${dr_pct}%"></div>
+                <div class="h2h-away" style="width:${aw_pct}%"></div>
+            </div>
+            <div class="h2h-labels">
+                <span style="color:#3b82f6">${hw_pct}%</span>
+                <span style="color:#94a3b8">${dr_pct}%</span>
+                <span style="color:#ef4444">${aw_pct}%</span>
+            </div>`;
+    }
 
-            // Confidence
-            const allProbs = [
-                [pPoisson[0], pElo[0], pForm[0], pH2h[0], pHA[0]],
-                [pPoisson[1], pElo[1], pForm[1], pH2h[1], pHA[1]],
-                [pPoisson[2], pElo[2], pForm[2], pH2h[2], pHA[2]]
-            ];
-            const stds = allProbs.map(arr => {
-                const mean = arr.reduce((a, b) => a + b) / arr.length;
-                const variance = arr.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / arr.length;
-                return Math.sqrt(variance);
-            });
-            const avgStd = stds.reduce((a, b) => a + b) / stds.length;
-            const confidence = Math.max(0.3, Math.min(1, 1 - avgStd * 5));
+    document.getElementById("resultsArea").innerHTML = `
+        <!-- Team strip -->
+        <div class="team-strip">
+            <div>
+                <div class="team-name-left">🏠 ${home}</div>
+                <div class="elo-badge">Elo: ${th.elo} · Win rate: ${(th.win_rate*100).toFixed(0)}%</div>
+            </div>
+            <div class="vs-badge">VS</div>
+            <div>
+                <div class="team-name-right">${away} ✈️</div>
+                <div class="elo-badge" style="text-align:right">Elo: ${ta.elo} · Win rate: ${(ta.win_rate*100).toFixed(0)}%</div>
+            </div>
+        </div>
 
-            // Outcome
-            let outcome = pHome > pAway && pHome > pDraw ? 'HOME_WIN' : (pDraw > pAway ? 'DRAW' : 'AWAY_WIN');
-            let outcomeText = outcome === 'HOME_WIN' ? `${homeTeam} Win` : outcome === 'DRAW' ? 'Draw' : `${awayTeam} Win`;
+        <!-- Outcome -->
+        <div class="outcome-banner ${oClass}">
+            <div class="outcome-label">Most Likely Outcome</div>
+            <div class="outcome-result">${oText}</div>
+            <div class="outcome-conf" style="color:${confColor}">
+                Model Confidence: <strong>${(d.confidence*100).toFixed(0)}%</strong>
+            </div>
+        </div>
 
-            // Scorelines
-            const scorelines = topScorelines(muH, muA);
+        <!-- Probs -->
+        <div class="probs">
+            <div class="prob-item">
+                <div class="prob-meta"><span>🏠 ${home} Win</span><span style="color:#3b82f6;font-weight:800">${pct(d.home_win)}</span></div>
+                <div class="prob-track"><div class="prob-fill fill-home" style="width:${d.home_win*100}%">${pct(d.home_win)}</div></div>
+            </div>
+            <div class="prob-item">
+                <div class="prob-meta"><span>🤝 Draw</span><span style="color:#f59e0b;font-weight:800">${pct(d.draw)}</span></div>
+                <div class="prob-track"><div class="prob-fill fill-draw" style="width:${d.draw*100}%">${pct(d.draw)}</div></div>
+            </div>
+            <div class="prob-item">
+                <div class="prob-meta"><span>✈️ ${away} Win</span><span style="color:#ef4444;font-weight:800">${pct(d.away_win)}</span></div>
+                <div class="prob-track"><div class="prob-fill fill-away" style="width:${d.away_win*100}%">${pct(d.away_win)}</div></div>
+            </div>
+        </div>
 
-            // Update UI
-            document.getElementById('noResults').style.display = 'none';
-            document.getElementById('resultsPanel').classList.add('active');
+        <!-- xG + confidence -->
+        <div class="stats-row">
+            <div class="stat-box">
+                <div class="stat-label">xG Home</div>
+                <div class="stat-val" style="color:#3b82f6">${d.expected_goals.home}</div>
+                <div class="stat-sub">${home}</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Confidence</div>
+                <div class="stat-val" style="color:${confColor}">${(d.confidence*100).toFixed(0)}%</div>
+                <div class="stat-sub">Model agreement</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">xG Away</div>
+                <div class="stat-val" style="color:#ef4444">${d.expected_goals.away}</div>
+                <div class="stat-sub">${away}</div>
+            </div>
+        </div>
 
-            document.getElementById('homeLabel').textContent = homeTeam;
-            document.getElementById('awayLabel').textContent = awayTeam;
+        <!-- Scorelines -->
+        <div class="section-title">🎯 Most Likely Scorelines</div>
+        <div class="scorelines">${scoresHTML}</div>
 
-            document.getElementById('homeProb').textContent = (pHome * 100).toFixed(1) + '%';
-            document.getElementById('drawProb').textContent = (pDraw * 100).toFixed(1) + '%';
-            document.getElementById('awayProb').textContent = (pAway * 100).toFixed(1) + '%';
+        <!-- Form -->
+        <div class="section-title">📈 Recent Form (last 6 games)</div>
+        <div style="margin-bottom:16px">
+            <div class="form-row-display">
+                <span class="form-label">🏠 ${home}:</span>
+                ${formPills(th.form)}
+            </div>
+            <div class="form-row-display" style="margin-top:6px">
+                <span class="form-label">✈️ ${away}:</span>
+                ${formPills(ta.form)}
+            </div>
+        </div>
 
-            document.getElementById('homeBar').style.width = (pHome * 100) + '%';
-            document.getElementById('drawBar').style.width = (pDraw * 100) + '%';
-            document.getElementById('awayBar').style.width = (pAway * 100) + '%';
+        <!-- H2H -->
+        <div class="section-title">⚔️ Head-to-Head History</div>
+        <div style="margin-bottom:16px">${h2hHTML}</div>
 
-            document.getElementById('homePercent').textContent = (pHome * 100).toFixed(0) + '%';
-            document.getElementById('drawPercent').textContent = (pDraw * 100).toFixed(0) + '%';
-            document.getElementById('awayPercent').textContent = (pAway * 100).toFixed(0) + '%';
+        <!-- Model breakdown -->
+        <div class="section-title">🔬 Individual Model Predictions</div>
+        <div class="models-grid">
+            <div class="model-row header">
+                <div>Model</div>
+                <div style="text-align:center;color:#93c5fd">Home Win</div>
+                <div style="text-align:center;color:#fde68a">Draw</div>
+                <div style="text-align:center;color:#fca5a5">Away Win</div>
+            </div>
+            ${modelRows}
+        </div>
+    `;
+    document.getElementById("resultsArea").style.display = 'block';
+}
 
-            document.getElementById('outcomeText').textContent = outcomeText;
-            document.getElementById('outcomeText').style.color = outcome === 'HOME_WIN' ? '#3b82f6' : outcome === 'DRAW' ? '#f59e0b' : '#ef4444';
-
-            document.getElementById('xgHome').textContent = muH.toFixed(2);
-            document.getElementById('xgAway').textContent = muA.toFixed(2);
-
-            document.getElementById('confidenceValue').textContent = (confidence * 100).toFixed(0) + '%';
-
-            // Scorelines
-            let scorelineHTML = scorelines.map(s => `
-                <div class="scoreline-item">
-                    <span class="scoreline-score">${s.score}</span>
-                    <span class="scoreline-prob">${(s.prob * 100).toFixed(2)}%</span>
-                </div>
-            `).join('');
-            document.getElementById('scorelinesList').innerHTML = scorelineHTML;
-
-            // Models table
-            const modelNames = ['Poisson', 'Elo', 'Form', 'H2H', 'Home/Away'];
-            let modelsHTML = modelNames.map((name, i) => `
-                <div class="model-row">
-                    <div>${name}</div>
-                    <div>${(predictions[i][0] * 100).toFixed(1)}%</div>
-                    <div>${(predictions[i][1] * 100).toFixed(1)}%</div>
-                    <div>${(predictions[i][2] * 100).toFixed(1)}%</div>
-                    <div style="font-size: 0.8em; color: #999;">w=${weights[i]}</div>
-                </div>
-            `).join('');
-            document.getElementById('modelsTable').innerHTML = modelsHTML;
-        }
-
-        function resetForm() {
-            document.getElementById('homeTeam').value = 'Manchester City';
-            document.getElementById('awayTeam').value = 'Liverpool';
-            document.getElementById('homeAvgScored').value = '1.8';
-            document.getElementById('homeAvgConceded').value = '0.8';
-            document.getElementById('awayAvgScored').value = '1.5';
-            document.getElementById('awayAvgConceded').value = '1.2';
-            document.getElementById('homeWinRate').value = '0.55';
-            document.getElementById('awayWinRate').value = '0.35';
-            document.getElementById('homeForm').value = 'W W W D W L';
-            document.getElementById('awayForm').value = 'L D W D L D';
-            document.getElementById('neutralVenue').checked = false;
-            document.getElementById('homeElo').value = '1650';
-            document.getElementById('awayElo').value = '1550';
-            document.getElementById('h2hHomeWins').value = '5';
-            document.getElementById('h2hDraws').value = '4';
-            document.getElementById('h2hAwayWins').value = '3';
-            document.getElementById('noResults').style.display = 'block';
-            document.getElementById('resultsPanel').classList.remove('active');
-        }
-
-        function switchTab(tab) {
-            document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById(tab).classList.add('active');
-            event.target.classList.add('active');
-        }
-
-        // Auto-predict on load
-        setTimeout(predict, 500);
-    </script>
+// Init
+loadTeams();
+</script>
 </body>
 </html>
