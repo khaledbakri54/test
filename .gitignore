@@ -1,0 +1,4 @@
+# Transient build/render tooling (used only to render campaign videos)
+node_modules/
+package.json
+package-lock.json
