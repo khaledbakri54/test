@@ -1,0 +1,420 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RICCIOCAPRESE — Franchise Investment Brief</title>
+<style>
+:root{
+  --ink:#0A0D13;--ink-2:#0E1620;--card:#111a24;--sea:#10324A;--glaze:#2C7DA0;
+  --ivory:#F3ECDD;--ivory-dim:#C9C2B4;--gold:#F4C466;--gold-glow:#FFDD9C;--terra:#C46B4A;
+  --muted:#7C8794;--line:rgba(243,236,221,.12);--line-2:rgba(243,236,221,.2);
+  --serif:"Didot","Bodoni MT","Bodoni 72","Playfair Display",Georgia,"Times New Roman",serif;
+  --naskh:"Amiri","Scheherazade New","Noto Naskh Arabic",serif;
+  --sans:"Helvetica Neue","Segoe UI",Arial,sans-serif;
+  --ease:cubic-bezier(.22,.61,.36,1);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--ink);color:var(--ivory);font-family:var(--sans);
+  -webkit-font-smoothing:antialiased;overflow:hidden}
+::selection{background:var(--gold);color:var(--ink)}
+
+.deck{position:relative;height:100svh;width:100vw;overflow:hidden}
+.slide{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;
+  padding:clamp(2rem,7vh,5rem) clamp(1.6rem,7vw,7rem);
+  opacity:0;visibility:hidden;transform:translateY(14px);
+  transition:opacity .6s var(--ease),transform .6s var(--ease),visibility .6s var(--ease);
+  background:
+    radial-gradient(120% 90% at 82% 8%, rgba(44,125,160,.10), transparent 55%),
+    linear-gradient(180deg,#070a10,var(--ink) 55%,#070910);
+  overflow:auto;
+}
+.slide.active{opacity:1;visibility:visible;transform:none}
+.slide::-webkit-scrollbar{width:0}
+
+.eyebrow{font-family:var(--sans);letter-spacing:.4em;text-transform:uppercase;
+  font-size:clamp(10px,1.4vw,12px);color:var(--gold);font-weight:700;margin-bottom:1.4rem;
+  display:flex;align-items:center;gap:1rem}
+.eyebrow .no{color:var(--muted);font-variant-numeric:tabular-nums;letter-spacing:.2em}
+.eyebrow .ln{flex:1;height:1px;background:var(--line);max-width:120px}
+
+h1{font-family:var(--serif);font-weight:500;line-height:1.02;letter-spacing:.005em;text-wrap:balance}
+.d-hero{font-size:clamp(2.6rem,8vw,6.2rem)}
+.d-xl{font-size:clamp(2rem,5.4vw,4.2rem)}
+.d-lg{font-size:clamp(1.7rem,4vw,3rem)}
+.lede{font-family:var(--serif);font-style:italic;color:var(--ivory-dim);
+  font-size:clamp(1.05rem,2.2vw,1.5rem);line-height:1.5;max-width:56ch;margin-top:1.2rem}
+.body{font-family:var(--sans);color:var(--ivory-dim);font-size:clamp(.95rem,1.7vw,1.1rem);
+  line-height:1.7;max-width:58ch}
+.ar{font-family:var(--naskh);direction:rtl;color:var(--gold-glow)}
+.hl{color:var(--gold)}
+.wm{font-family:var(--serif);letter-spacing:.14em}.wm b{font-weight:500;color:var(--gold)}
+
+/* layout helpers */
+.cols{display:grid;gap:clamp(1rem,2.4vw,2rem);margin-top:2rem}
+.c2{grid-template-columns:1fr}.c3{grid-template-columns:1fr}.c4{grid-template-columns:1fr 1fr}
+@media(min-width:820px){.c2{grid-template-columns:1fr 1fr}.c3{grid-template-columns:repeat(3,1fr)}.c4{grid-template-columns:repeat(4,1fr)}}
+.split{display:grid;gap:clamp(1.6rem,4vw,4rem);align-items:center}
+@media(min-width:900px){.split{grid-template-columns:1.05fr .95fr}}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:8px;
+  padding:clamp(1.1rem,2vw,1.6rem);display:flex;flex-direction:column;gap:.5rem}
+.card .k{font-family:var(--sans);letter-spacing:.24em;text-transform:uppercase;font-size:10px;color:var(--gold)}
+.card .t{font-family:var(--serif);font-size:clamp(1.1rem,2.2vw,1.4rem);color:var(--ivory);line-height:1.15}
+.card .p{font-family:var(--sans);font-size:clamp(.82rem,1.5vw,.95rem);color:var(--ivory-dim);line-height:1.55}
+
+/* stat tiles */
+.stat{background:linear-gradient(180deg,rgba(44,125,160,.08),transparent);border:1px solid var(--line);
+  border-radius:8px;padding:1.3rem 1.2rem}
+.stat .num{font-family:var(--serif);font-size:clamp(1.9rem,4.6vw,3.1rem);color:var(--gold);
+  line-height:1;font-variant-numeric:tabular-nums}
+.stat .lab{font-family:var(--sans);font-size:clamp(.78rem,1.4vw,.9rem);color:var(--ivory-dim);margin-top:.5rem;line-height:1.4}
+
+/* numbered list rows */
+.rows{margin-top:1.6rem;display:flex;flex-direction:column}
+.row{display:grid;grid-template-columns:auto 1fr;gap:1.2rem;align-items:baseline;
+  padding:1rem 0;border-top:1px solid var(--line)}
+.row:last-child{border-bottom:1px solid var(--line)}
+.row .n{font-family:var(--serif);color:var(--terra);font-size:1.1rem}
+.row .h{font-family:var(--serif);font-size:clamp(1.15rem,2.4vw,1.5rem);color:var(--ivory)}
+.row .s{font-family:var(--sans);color:var(--ivory-dim);font-size:clamp(.85rem,1.5vw,.98rem);margin-top:.2rem;line-height:1.5}
+
+/* chips */
+.chips{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:1.6rem}
+.chip{font-family:var(--sans);font-size:clamp(.8rem,1.5vw,.95rem);letter-spacing:.02em;
+  border:1px solid var(--line-2);border-radius:100px;padding:.5em 1.1em;color:var(--ivory)}
+.chip.gold{border-color:var(--gold);color:var(--gold)}
+
+/* positioning map */
+.map{position:relative;aspect-ratio:1.35/1;border:1px solid var(--line);border-radius:8px;
+  background:var(--ink-2);margin-top:1.2rem;min-height:240px}
+.map .ax{position:absolute;background:var(--line)}
+.map .axx{left:8%;right:8%;top:50%;height:1px}
+.map .axy{top:8%;bottom:8%;left:50%;width:1px}
+.map .lbl{position:absolute;font-family:var(--sans);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+.map .pt{position:absolute;transform:translate(-50%,-50%);text-align:center}
+.map .pt .dot{width:10px;height:10px;border-radius:50%;background:var(--muted);margin:0 auto .35rem}
+.map .pt.us .dot{background:var(--gold);box-shadow:0 0 18px 5px rgba(244,196,102,.55);width:14px;height:14px}
+.map .pt .nm{font-family:var(--serif);font-size:clamp(.8rem,1.6vw,1rem);color:var(--ivory-dim)}
+.map .pt.us .nm{color:var(--gold)}
+
+/* econ table */
+.econ{margin-top:1.4rem;width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+.econ td{padding:.75rem .4rem;border-bottom:1px solid var(--line);font-size:clamp(.85rem,1.6vw,1rem)}
+.econ td:first-child{color:var(--ivory-dim);font-family:var(--sans)}
+.econ td:last-child{text-align:right;font-family:var(--serif);color:var(--ivory)}
+.econ tr.tot td{border-top:1px solid var(--line-2);border-bottom:none;color:var(--gold);font-size:clamp(1rem,2vw,1.2rem)}
+.econ tr.tot td:last-child{color:var(--gold)}
+
+/* timeline */
+.tl{display:grid;gap:1rem;margin-top:1.6rem}
+@media(min-width:820px){.tl{grid-template-columns:repeat(3,1fr)}}
+.ph{border-top:2px solid var(--gold);padding-top:1rem}
+.ph .when{font-family:var(--sans);letter-spacing:.24em;text-transform:uppercase;font-size:10px;color:var(--gold)}
+.ph .what{font-family:var(--serif);font-size:clamp(1.1rem,2.2vw,1.4rem);color:var(--ivory);margin:.4rem 0 .5rem}
+.ph .det{font-family:var(--sans);font-size:.9rem;color:var(--ivory-dim);line-height:1.55}
+
+/* cover mark (CSS urchin) */
+.mark{width:clamp(150px,26vw,300px);aspect-ratio:1;border-radius:50%;position:relative;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255,240,210,.95) 0 8%, rgba(244,196,102,.55) 14%, transparent 30%),
+    repeating-conic-gradient(from 0deg at 50% 50%, var(--gold) 0deg 1.1deg, transparent 1.1deg 3.6deg);
+  -webkit-mask:radial-gradient(circle at 50% 50%, #000 0 30%, rgba(0,0,0,.85) 45%, transparent 62%);
+  mask:radial-gradient(circle at 50% 50%, #000 0 30%, rgba(0,0,0,.85) 45%, transparent 62%);
+  filter:drop-shadow(0 0 50px rgba(244,196,102,.45));
+  animation:spin 60s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.cover{align-items:center;text-align:center}
+.cover .stack{display:flex;flex-direction:column;align-items:center;gap:1.5rem}
+.confid{font-family:var(--sans);letter-spacing:.3em;text-transform:uppercase;font-size:10px;color:var(--muted)}
+
+.note{margin-top:1.6rem;font-family:var(--sans);font-size:11px;letter-spacing:.06em;
+  color:var(--muted);border-left:2px solid var(--terra);padding:.5rem 0 .5rem .9rem;max-width:60ch;line-height:1.5}
+.ph-holder{color:var(--terra);font-style:italic}
+
+/* nav */
+.nav{position:fixed;bottom:0;left:0;right:0;z-index:20;display:flex;align-items:center;
+  gap:1rem;padding:.9rem clamp(1.2rem,4vw,3rem);
+  background:linear-gradient(180deg,transparent,rgba(5,7,11,.75))}
+.dots{display:flex;gap:7px;flex:1;flex-wrap:wrap}
+.dots b{width:8px;height:8px;border-radius:50%;background:rgba(243,236,221,.22);cursor:pointer;transition:background .25s,transform .25s;border:none;padding:0}
+.dots b.on{background:var(--gold);transform:scale(1.25)}
+.nbtn{appearance:none;border:1px solid var(--line-2);background:rgba(243,236,221,.04);color:var(--ivory);
+  width:40px;height:40px;border-radius:50%;display:grid;place-items:center;cursor:pointer}
+.nbtn:hover{border-color:var(--gold);color:var(--gold)}
+.nbtn:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.nbtn svg{width:16px;height:16px;fill:currentColor}
+.count{font-family:var(--sans);font-variant-numeric:tabular-nums;letter-spacing:.14em;font-size:12px;color:var(--muted);min-width:56px;text-align:center}
+.brandtag{position:fixed;top:clamp(1rem,3vh,1.8rem);left:clamp(1.2rem,4vw,3rem);z-index:20;
+  font-family:var(--serif);letter-spacing:.3em;font-size:11px;color:var(--ivory-dim);opacity:.7}
+.hint{position:fixed;top:clamp(1rem,3vh,1.8rem);right:clamp(1.2rem,4vw,3rem);z-index:20;
+  font-family:var(--sans);letter-spacing:.16em;text-transform:uppercase;font-size:10px;color:var(--muted)}
+
+@media (prefers-reduced-motion:reduce){.mark{animation:none}.slide{transition-duration:.2s}}
+
+/* PRINT → one page per slide, PDF-ready */
+@media print{
+  @page{size:landscape;margin:0}
+  html,body{height:auto;overflow:visible}
+  .deck{height:auto}
+  .nav,.brandtag,.hint{display:none}
+  .slide{position:relative;inset:auto;opacity:1;visibility:visible;transform:none;
+    height:100vh;page-break-after:always;break-after:page;overflow:hidden;
+    -webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .mark{animation:none}
+}
+</style>
+</head>
+<body>
+<div class="brandtag">RICCIOCAPRESE</div>
+<div class="hint">← / → to navigate · P to print</div>
+
+<div class="deck" id="deck">
+
+  <!-- 1 · COVER -->
+  <section class="slide cover">
+    <div class="stack">
+      <div class="mark" aria-hidden="true"></div>
+      <div class="wm d-hero" style="font-size:clamp(2rem,7vw,4.6rem)">RICCIO<b>CAPRESE</b></div>
+      <h1 class="d-lg" style="max-width:18ch">The light of Capri, now in Jordan.</h1>
+      <div class="confid">Franchise Investment Brief · 2026 · Confidential</div>
+    </div>
+  </section>
+
+  <!-- 2 · THESIS -->
+  <section class="slide">
+    <div class="eyebrow"><span class="no">01</span><span>The opportunity</span><span class="ln"></span></div>
+    <h1 class="d-xl" style="max-width:20ch">An exclusive territory franchise of a heritage Italian luxury lighting house — <span class="hl">arriving first in Jordan.</span></h1>
+    <p class="lede">A proven brand. A protected market. A category with no serious competitor in the region. You are not buying a product line — you are securing the light of Capri for the Levant and the Gulf.</p>
+  </section>
+
+  <!-- 3 · THE BRAND -->
+  <section class="slide">
+    <div class="eyebrow"><span class="no">02</span><span>The brand</span><span class="ln"></span></div>
+    <h1 class="d-lg">Born on an island the world already loves.</h1>
+    <div class="cols c3">
+      <div class="card"><div class="k">Origin</div><div class="t">Capri</div><div class="p">Designed from the profile of the <em>riccio</em> — the sea urchin, an icon of Capri recognised worldwide.</div></div>
+      <div class="card"><div class="k">Craft</div><div class="t">Capodimonte ceramic</div><div class="p">Thrown in clay and hand-glazed by master potters of the ancient Capodimonte school. Each piece unique.</div></div>
+      <div class="card"><div class="k">Category</div><div class="t">Functional art</div><div class="p">Not décor and not fine art — a collectible light object that sits between the two, at a luxury price.</div></div>
+    </div>
+    <p class="body" style="margin-top:1.6rem">Heritage is the moat. It cannot be copied by a factory, and it justifies the price the way no mass brand can.</p>
+  </section>
+
+  <!-- 4 · PRODUCT -->
+  <section class="slide">
+    <div class="eyebrow"><span class="no">03</span><span>The product</span><span class="ln"></span></div>
+    <h1 class="d-lg">Five collections. One unmistakable language of light.</h1>
+    <div class="rows">
+      <div class="row"><div class="n">01</div><div><div class="h">Riccio</div><div class="s">The origin — the sea urchin itself, ceramic spines radiating a warm glow.</div></div></div>
+      <div class="row"><div class="n">02</div><div><div class="h">Ramo Caprese</div><div class="s">A branch of the island, gathered into light.</div></div></div>
+      <div class="row"><div class="n">03</div><div><div class="h">Bubble</div><div class="s">Sea-foam made solid — soft, spherical, weightless.</div></div></div>
+      <div class="row"><div class="n">04</div><div><div class="h">Anemone</div><div class="s">The tide pool, blooming open on the table.</div></div></div>
+      <div class="row"><div class="n">05</div><div><div class="h">Dalia</div><div class="s">A garden flower in glazed petals of colour.</div></div></div>
+    </div>
+    <p class="note">Retail positioning: table, wall, suspension &amp; floor pieces across an entry-to-collector price ladder — <span class="ph-holder">[insert your JD price bands per collection]</span>.</p>
+  </section>
+
+  <!-- 5 · WHY NOW -->
+  <section class="slide">
+    <div class="eyebrow"><span class="no">04</span><span>Why now, why here</span><span class="ln"></span></div>
+    <h1 class="d-lg">The region is buying luxury interiors — and there is nothing like this in it.</h1>
+    <div class="cols c4">
+      <div class="stat"><div class="num">1st</div><div class="lab">Mover advantage — no direct Italian ceramic-light competitor in the territory</div></div>
+      <div class="stat"><div class="num">100%</div><div class="lab">Handmade &amp; unique — every piece is a one-of-one, gift &amp; collector ready</div></div>
+      <div class="stat"><div class="num">3</div><div class="lab">Demand engines: new-build homes, hospitality fit-outs, luxury gifting</div></div>
+      <div class="stat"><div class="num">GCC</div><div class="lab">Amman as the beachhead for Gulf territory expansion</div></div>
+    </div>
+    <p class="note">Figures above are strategic framing. <span class="ph-holder">Drop in sourced market data</span> — Jordan/GCC home-décor &amp; lighting market size, luxury-goods growth, tourism &amp; hospitality pipeline — to harden this slide before investor meetings.</p>
+  </section>
+
+  <!-- 6 · CUSTOMER -->
+  <section class="slide">
+    <div class="eyebrow"><span class="no">05</span><span>The customer</span><span class="ln"></span></div>
+    <h1 class="d-lg">Four buyers, one taste.</h1>
+    <div class="cols c4">
+      <div class="card"><div class="k">Retail</div><div class="t">The homeowner</div><div class="p">Affluent Jordanian &amp; Gulf households furnishing statement pieces for the majlis, salon &amp; entrance.</div></div>
+      <div class="card"><div class="k">Trade</div><div class="t">Designers &amp; architects</div><div class="p">Interior studios speccing signature lighting into high-end residential &amp; villa projects.</div></div>
+      <div class="card"><div class="k">Contract</div><div class="t">Hospitality</div><div class="p">Boutique hotels, fine dining &amp; lounges wanting a piece guests photograph and remember.</div></div>
+      <div class="card"><div class="k">Gifting</div><div class="t">Corporate &amp; occasion</div><div class="p">Weddings, VIP &amp; corporate gifting — a handmade Italian object with a story.</div></div>
+    </div>
+  </section>
+
+  <!-- 7 · POSITIONING -->
+  <section class="slide">
+    <div class="eyebrow"><span class="no">06</span><span>The whitespace</span><span class="ln"></span></div>
+    <div class="split">
+      <div>
+        <h1 class="d-lg">We own the corner no one else can reach.</h1>
+        <p class="body" style="margin-top:1.2rem">Mass lighting competes on price. Local artisans lack a brand. Galleries have no function. RICCIOCAPRESE is <span class="hl">collectible functional art with a European name</span> — the only quadrant with pricing power and no incumbent.</p>
+      </div>
+      <div class="map" aria-hidden="true">
+        <div class="ax axx"></div><div class="ax axy"></div>
+        <div class="lbl" style="left:2%;top:47%">Mass</div>
+        <div class="lbl" style="right:2%;top:47%">Collectible</div>
+        <div class="lbl" style="left:44%;top:2%">Decorative</div>
+        <div class="lbl" style="left:46%;bottom:2%">Functional</div>
+        <div class="pt" style="left:24%;top:30%"><div class="dot"></div><div class="nm">Art galleries</div></div>
+        <div class="pt" style="left:22%;top:72%"><div class="dot"></div><div class="nm">Mass lighting</div></div>
+        <div class="pt" style="left:60%;top:26%"><div class="dot"></div><div class="nm">Local artisans</div></div>
+        <div class="pt us" style="left:76%;top:70%"><div class="dot"></div><div class="nm">RICCIOCAPRESE</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8 · FRANCHISE MODEL -->
+  <section class="slide">
+    <div class="eyebrow"><span class="no">07</span><span>The franchise model</span><span class="ln"></span></div>
+    <h1 class="d-lg">What the franchisee secures.</h1>
+    <div class="cols c3">
+      <div class="card"><div class="k">Exclusivity</div><div class="t">Protected territory</div><div class="p">Sole rights to the RICCIOCAPRESE brand across an agreed territory — starting with Jordan.</div></div>
+      <div class="card"><div class="k">Supply</div><div class="t">Direct from Italy</div><div class="p">Authenticated product supply from the maison, with certificates of origin &amp; authenticity.</div></div>
+      <div class="card"><div class="k">System</div><div class="t">Brand &amp; playbook</div><div class="p">Identity, merchandising, training, pricing architecture &amp; the launch campaign — turnkey.</div></div>
+    </div>
+    <p class="note">Commercial terms — <span class="ph-holder">[franchise / territory fee], [royalty %], [minimum order / opening inventory], [term &amp; renewal]</span> — to be inserted from your agreement with the maison.</p>
+  </section>
+
+  <!-- 9 · REVENUE -->
+  <section class="slide">
+    <div class="eyebrow"><span class="no">08</span><span>Revenue streams</span><span class="ln"></span></div>
+    <h1 class="d-lg">Five ways the same brand earns.</h1>
+    <div class="rows">
+      <div class="row"><div class="n">01</div><div><div class="h">Flagship showroom</div><div class="s">Amman retail — the brand home, highest-margin walk-in &amp; appointment sales.</div></div></div>
+      <div class="row"><div class="n">02</div><div><div class="h">Trade &amp; contract</div><div class="s">Volume projects with designers, developers &amp; hospitality — larger tickets, repeat spec.</div></div></div>
+      <div class="row"><div class="n">03</div><div><div class="h">E-commerce</div><div class="s">Catalogue &amp; direct sales beyond the showroom footprint, across the territory.</div></div></div>
+      <div class="row"><div class="n">04</div><div><div class="h">Corporate &amp; occasion gifting</div><div class="s">Weddings, VIP &amp; corporate — bundled, branded, seasonal.</div></div></div>
+      <div class="row"><div class="n">05</div><div><div class="h">Pop-ups &amp; events</div><div class="s">Design weeks, luxury malls &amp; partner residencies to acquire customers without permanent rent.</div></div></div>
+    </div>
+  </section>
+
+  <!-- 10 · UNIT ECONOMICS -->
+  <section class="slide">
+    <div class="eyebrow"><span class="no">09</span><span>Unit economics</span><span class="ln"></span></div>
+    <div class="split">
+      <div>
+        <h1 class="d-lg">The shape of the model.</h1>
+        <p class="body" style="margin-top:1rem">A luxury, high-margin, low-unit-volume business. A handful of collector sales and one hospitality project can carry a month. The structure below shows the <em>levers</em> — you set the numbers.</p>
+        <p class="note">ILLUSTRATIVE STRUCTURE ONLY — the values below are placeholders to show the model, <span class="ph-holder">not real figures</span>. Replace every number with your costed plan before any investor uses this.</p>
+      </div>
+      <div>
+        <table class="econ">
+          <tr><td>Avg. order value (blended)</td><td class="ph-holder">JD —</td></tr>
+          <tr><td>Product gross margin</td><td class="ph-holder">— %</td></tr>
+          <tr><td>Orders / month at maturity</td><td class="ph-holder">—</td></tr>
+          <tr><td>Monthly revenue</td><td class="ph-holder">JD —</td></tr>
+          <tr><td>Rent · staff · marketing</td><td class="ph-holder">JD —</td></tr>
+          <tr class="tot"><td>Monthly contribution</td><td class="ph-holder">JD —</td></tr>
+          <tr><td>Est. months to break even</td><td class="ph-holder">—</td></tr>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- 11 · GO TO MARKET -->
+  <section class="slide">
+    <div class="eyebrow"><span class="no">10</span><span>Go-to-market</span><span class="ln"></span></div>
+    <h1 class="d-lg">Land Amman. Then take the Gulf.</h1>
+    <div class="tl">
+      <div class="ph"><div class="when">Phase 1 · Launch</div><div class="what">The Amman flagship</div><div class="det">Open the showroom, launch with the campaign film, PR &amp; a founding-collector event. Establish the brand home.</div></div>
+      <div class="ph"><div class="when">Phase 2 · Grow</div><div class="what">Trade &amp; hospitality</div><div class="det">Designer partnerships, hotel &amp; restaurant specs, e-commerce switch-on, gifting programme. Build repeat revenue.</div></div>
+      <div class="ph"><div class="when">Phase 3 · Expand</div><div class="what">Gulf territory</div><div class="det">Replicate the model into GCC luxury hubs — the second and third showrooms on a proven template.</div></div>
+    </div>
+  </section>
+
+  <!-- 12 · MARKETING ENGINE -->
+  <section class="slide">
+    <div class="eyebrow"><span class="no">11</span><span>The marketing engine</span><span class="ln"></span></div>
+    <div class="split">
+      <div>
+        <h1 class="d-lg">Your launch campaign is already built.</h1>
+        <p class="body" style="margin-top:1.2rem">This isn't a plan to make assets later. The bilingual brand identity, the cinematic launch film and the vertical social cut exist now — day one, you launch loud.</p>
+        <div class="chips">
+          <span class="chip gold">Cinematic launch film</span>
+          <span class="chip gold">15s vertical Reel</span>
+          <span class="chip">Bilingual identity system</span>
+          <span class="chip">Palette &amp; typography</span>
+          <span class="chip">Voice &amp; taglines</span>
+        </div>
+      </div>
+      <div class="card" style="justify-content:center;min-height:220px">
+        <div class="k">Ready to deploy</div>
+        <div class="t" style="font-size:clamp(1.3rem,3vw,1.9rem)">“Own a piece of Capri.”</div>
+        <div class="ar" style="font-size:clamp(1.2rem,3vw,1.7rem)">اقتنِ قطعةً من كابري</div>
+        <div class="p" style="margin-top:.6rem">Film · social · print · showroom screens — one coherent world, in Arabic and English.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 13 · THE ASK -->
+  <section class="slide">
+    <div class="eyebrow"><span class="no">12</span><span>The ask</span><span class="ln"></span></div>
+    <h1 class="d-xl">Investment sought: <span class="hl ph-holder">JD [amount]</span></h1>
+    <div class="cols c4" style="margin-top:1.8rem">
+      <div class="card"><div class="k">Use of funds</div><div class="t">Showroom</div><div class="p">Lease, fit-out &amp; the flagship experience.</div></div>
+      <div class="card"><div class="k">Use of funds</div><div class="t">Opening inventory</div><div class="p">Founding collection from Italy &amp; certificates.</div></div>
+      <div class="card"><div class="k">Use of funds</div><div class="t">Launch marketing</div><div class="p">Campaign rollout, PR &amp; the founding event.</div></div>
+      <div class="card"><div class="k">Use of funds</div><div class="t">Working capital</div><div class="p">Runway to break-even &amp; first restock.</div></div>
+    </div>
+    <p class="note">Investor return &amp; structure — <span class="ph-holder">[equity % / profit share], [projected 3-yr revenue &amp; EBITDA], [payback horizon]</span> — to be completed with your financial model. Keep this slide honest; investors test it hardest.</p>
+  </section>
+
+  <!-- 14 · CLOSE -->
+  <section class="slide cover">
+    <div class="stack">
+      <h1 class="d-hero" style="max-width:16ch">Own the light.<br>Own the territory.</h1>
+      <div class="ar" style="font-family:var(--naskh);font-size:clamp(1.4rem,4vw,2.4rem)">امتلك الضوء… وامتلك المنطقة</div>
+      <div class="wm" style="font-size:clamp(1.3rem,3.4vw,2rem);margin-top:1rem">RICCIO<b>CAPRESE</b> · Jordan</div>
+      <div class="confid ph-holder">[ your name · email · phone · Amman ]</div>
+    </div>
+  </section>
+
+</div>
+
+<div class="nav">
+  <button class="nbtn" id="prev" aria-label="Previous slide"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6z"/></svg></button>
+  <div class="dots" id="dots" role="tablist" aria-label="Slides"></div>
+  <div class="count" id="count">1 / 14</div>
+  <button class="nbtn" id="next" aria-label="Next slide"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6z"/></svg></button>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var slides=[].slice.call(document.querySelectorAll(".slide"));
+  var N=slides.length,i=0;
+  var dots=document.getElementById("dots"),count=document.getElementById("count");
+  for(var k=0;k<N;k++){(function(k){var b=document.createElement("button");b.setAttribute("role","tab");b.setAttribute("aria-label","Slide "+(k+1));dots.appendChild(b);b.addEventListener("click",function(){go(k);});})(k);}
+  var dotEls=[].slice.call(dots.children);
+  function render(){
+    for(var k=0;k<N;k++){slides[k].classList.toggle("active",k===i);dotEls[k].classList.toggle("on",k===i);}
+    count.textContent=(i+1)+" / "+N;
+    if(location.hash!=="#s"+(i+1)) history.replaceState(null,"","#s"+(i+1));
+  }
+  function go(n){i=Math.max(0,Math.min(N-1,n));render();}
+  document.getElementById("next").addEventListener("click",function(){go(i+1);});
+  document.getElementById("prev").addEventListener("click",function(){go(i-1);});
+  document.addEventListener("keydown",function(e){
+    if(e.key==="ArrowRight"||e.key==="PageDown"||e.key===" "){e.preventDefault();go(i+1);}
+    else if(e.key==="ArrowLeft"||e.key==="PageUp"){e.preventDefault();go(i-1);}
+    else if(e.key==="Home"){go(0);} else if(e.key==="End"){go(N-1);}
+    else if(e.key==="p"||e.key==="P"){window.print();}
+  });
+  // swipe
+  var x0=null;
+  document.getElementById("deck").addEventListener("touchstart",function(e){x0=e.touches[0].clientX;},{passive:true});
+  document.getElementById("deck").addEventListener("touchend",function(e){
+    if(x0==null)return;var dx=e.changedTouches[0].clientX-x0;if(Math.abs(dx)>50)go(i+(dx<0?1:-1));x0=null;
+  },{passive:true});
+  // click zones (edges) advance
+  document.getElementById("deck").addEventListener("click",function(e){
+    if(e.target.closest("a,button"))return;
+    var w=innerWidth;if(e.clientX>w*0.72)go(i+1);else if(e.clientX<w*0.28)go(i-1);
+  });
+  // deep link
+  var m=(location.hash.match(/^#s(\d+)$/));if(m){i=Math.max(0,Math.min(N-1,parseInt(m[1],10)-1));}
+  render();
+})();
+</script>
+</body>
+</html>
