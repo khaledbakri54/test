@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="ar">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+:root{
+  --gold:#F4C466; --gold-sh:#9c6b1c; --ink:#0A0D13;
+  --heavy:"Tahoma","Arial Black","Arial",sans-serif;
+  --serif:"Didot","Bodoni MT","Playfair Display",Georgia,serif;
+  --sans:"Helvetica Neue","Segoe UI",Arial,sans-serif;
+  --naskh:"Amiri","Scheherazade New","Noto Naskh Arabic",serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1080px;height:1920px;background:transparent;overflow:hidden}
+.frame{position:relative;width:1080px;height:1920px;background:transparent;font-family:var(--sans)}
+.hide{display:none!important}
+
+/* soft scrims for legibility (mostly transparent) */
+.scrim-top{position:absolute;top:0;left:0;right:0;height:360px;background:linear-gradient(180deg,rgba(6,26,25,.55),rgba(6,26,25,0))}
+.scrim-bot{position:absolute;bottom:0;left:0;right:0;height:620px;background:linear-gradient(0deg,rgba(6,26,25,.62),rgba(6,26,25,0))}
+
+/* LOGO (top) */
+.logo{position:absolute;top:70px;left:0;right:0;text-align:center}
+.logo .wm{font-family:var(--serif);letter-spacing:.16em;font-size:56px;color:#fff;text-shadow:0 3px 18px rgba(0,0,0,.5)}
+.logo .wm b{color:var(--gold);font-weight:500}
+.logo .ar{font-family:var(--naskh);font-size:30px;color:#eafffb;letter-spacing:.02em;margin-top:8px;text-shadow:0 2px 12px rgba(0,0,0,.55)}
+
+/* HERO (lower third) */
+.hero{position:absolute;left:0;right:0;bottom:520px;text-align:center;padding:0 90px}
+.hero .kick{font-family:var(--heavy);font-weight:700;direction:rtl;font-size:40px;color:#fff;margin-bottom:26px;text-shadow:0 2px 14px rgba(0,0,0,.6)}
+.hero .h{font-family:var(--heavy);font-weight:900;direction:rtl;font-size:150px;line-height:1;color:#fff;letter-spacing:-2px;
+  text-shadow:0 5px 0 var(--gold-sh),0 10px 0 #6d480f,0 22px 40px rgba(0,0,0,.6)}
+.hero .h .g{color:var(--gold);text-shadow:0 5px 0 #8a5c14,0 10px 0 #5e3f0d,0 22px 40px rgba(0,0,0,.6)}
+.hero .en{font-family:var(--serif);font-style:italic;font-size:46px;color:#eafffb;margin-top:24px;text-shadow:0 2px 16px rgba(0,0,0,.6)}
+
+/* CTA (bottom) */
+.cta{position:absolute;left:0;right:0;bottom:150px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:26px}
+.cta .btn{font-family:var(--heavy);font-weight:900;direction:rtl;font-size:60px;color:var(--ink);background:var(--gold);
+  padding:26px 60px;border-radius:14px;box-shadow:0 14px 44px -8px rgba(244,196,102,.7),0 5px 0 var(--gold-sh)}
+.cta .wm{font-family:var(--serif);letter-spacing:.16em;font-size:44px;color:#fff;text-shadow:0 2px 16px rgba(0,0,0,.6)}
+.cta .wm b{color:var(--gold);font-weight:500}
+.cta .region{font-family:var(--sans);letter-spacing:.4em;text-transform:uppercase;font-size:24px;color:#dff5f0;text-shadow:0 2px 12px rgba(0,0,0,.6)}
+</style>
+</head>
+<body>
+<div class="frame" id="frame">
+  <div class="scrim-top s-logo hide"></div>
+  <div class="logo blk" data-o="logo">
+    <div class="wm">RICCIO<b>CAPRESE</b></div>
+    <div class="ar">عطور المنزل الفاخرة · جزيرة كابري</div>
+  </div>
+
+  <div class="scrim-bot s-hero hide"></div>
+  <div class="hero blk hide" data-o="hero">
+    <div class="kick">عبق جزيرة كابري… الآن في الأردن</div>
+    <div class="h"><span class="g">كابري</span> في بيتك</div>
+    <div class="en">The scent of Capri, at home.</div>
+  </div>
+
+  <div class="scrim-bot s-cta hide"></div>
+  <div class="cta blk hide" data-o="cta">
+    <div class="btn">احجز عطرك اليوم</div>
+    <div class="wm">RICCIO<b>CAPRESE</b></div>
+    <div class="region">Amman · الأردن</div>
+  </div>
+</div>
+<script>
+  var o=(location.hash.match(/o=(\w+)/)||[])[1]||"logo";
+  document.querySelectorAll(".blk").forEach(function(b){b.classList.toggle("hide", b.getAttribute("data-o")!==o);});
+  if(o==="logo") document.querySelector(".s-logo").classList.remove("hide");
+  if(o==="hero") document.querySelector(".s-hero").classList.remove("hide");
+  if(o==="cta"){ document.querySelector(".s-cta").classList.remove("hide"); document.querySelector(".logo").classList.remove("hide"); document.querySelector(".s-logo")&&null; }
+</script>
+</body>
+</html>
