@@ -227,19 +227,35 @@ body{background:#000;color:#fff;font-family:var(--sans);display:flex;align-items
   cloudPos.forEach(function(p){var s=new THREE.Sprite(new THREE.SpriteMaterial({map:cloudTex,transparent:true,opacity:0.0,depthWrite:false}));s.position.set(p[0],p[1],p[2]);s.scale.set(p[3],p[3]*0.7,1);scene.add(s);clouds.push({s:s,base:p});});
 
   // ---- Amman skyline silhouette ----
-  var skyTex=(function(){var w=1024,h=256,cv=document.createElement("canvas");cv.width=w;cv.height=h;var g=cv.getContext("2d");
-    g.clearRect(0,0,w,h); g.fillStyle="rgba(9,52,49,0.9)";
-    var x=0; while(x<w){var bw=30+Math.random()*70,bh=60+Math.random()*150; g.fillRect(x,h-bh,bw,bh); x+=bw+6;}
-    // a dome
-    g.beginPath();g.arc(w*0.5,h-150,46,Math.PI,2*Math.PI);g.fill();g.fillRect(w*0.5-46,h-150,92,150);
-    // minaret
-    g.fillRect(w*0.5+70,h-210,14,210);
+  var skyTex=(function(){var w=1600,h=340,cv=document.createElement("canvas");cv.width=w;cv.height=h;var g=cv.getContext("2d");
+    g.clearRect(0,0,w,h); var SIL="rgba(7,44,42,0.95)"; g.fillStyle=SIL;
+    // filler city (deterministic)
+    var x=0; while(x<w){var bw=26+((x*37)%58),bh=38+((x*53)%86); g.fillRect(x,h-bh,bw,bh); x+=bw+5;}
+    // Citadel — Roman columns (Temple of Hercules)
+    (function(){var bx=96,cy=h; g.fillStyle=SIL; for(var i=0;i<4;i++)g.fillRect(bx+i*26,cy-150,10,150); g.fillRect(bx-6,cy-160,4*26+6,12);})();
+    // King Abdullah I Mosque — dome + minarets
+    (function(){var cx=w*0.28, base=h-64; g.fillStyle=SIL;
+      g.fillRect(cx-72,base,144,64);
+      g.beginPath();g.arc(cx,base,66,Math.PI,2*Math.PI);g.closePath();g.fill();
+      g.beginPath();g.arc(cx,base-66,7,0,Math.PI*2);g.fill();
+      g.fillRect(cx-104,base-172,14,172); g.beginPath();g.arc(cx-97,base-172,9,Math.PI,2*Math.PI);g.fill();
+      g.fillRect(cx+90,base-172,14,172); g.beginPath();g.arc(cx+97,base-172,9,Math.PI,2*Math.PI);g.fill();})();
+    // Abdoun Bridge — cable-stayed (hero, gold cables)
+    (function(){var deckY=h-56, x0=w*0.45, x1=w*0.9; g.fillStyle=SIL; g.fillRect(x0,deckY,x1-x0,9);
+      [w*0.575,w*0.775].forEach(function(px){var topY=deckY-212;
+        g.strokeStyle=SIL;g.lineWidth=9;g.beginPath();g.moveTo(px-16,deckY);g.lineTo(px,topY);g.lineTo(px+16,deckY);g.stroke();
+        g.strokeStyle="rgba(244,196,102,0.6)";g.lineWidth=2;
+        for(var k=1;k<=6;k++){var dx=k*22;g.beginPath();g.moveTo(px,topY+8);g.lineTo(px-16-dx,deckY);g.stroke();g.beginPath();g.moveTo(px,topY+8);g.lineTo(px+16+dx,deckY);g.stroke();}});
+      g.fillStyle=SIL; g.fillRect(x0+46,deckY+9,10,42); g.fillRect(x1-70,deckY+9,10,42);})();
+    // Jordan Gate twin towers
+    (function(){var tx=w*0.94, base=h; g.fillStyle=SIL; g.fillRect(tx-36,base-272,30,272); g.fillRect(tx+2,base-250,30,250);
+      g.beginPath();g.arc(tx-21,base-272,15,Math.PI,2*Math.PI);g.fill(); g.beginPath();g.arc(tx+17,base-250,15,Math.PI,2*Math.PI);g.fill();})();
     return new THREE.CanvasTexture(cv);})();
-  var skyline=new THREE.Mesh(new THREE.PlaneGeometry(16,4),new THREE.MeshBasicMaterial({map:skyTex,transparent:true,opacity:0}));
-  skyline.position.set(0,-1.2,-6); scene.add(skyline);
+  var skyline=new THREE.Mesh(new THREE.PlaneGeometry(22,4.67),new THREE.MeshBasicMaterial({map:skyTex,transparent:true,opacity:0}));
+  skyline.position.set(0,-0.95,-6.2); scene.add(skyline);
 
   // ---- timeline ----
-  var SEG=[{c:null,d:1.8},{c:"hero",d:6.5},{c:"detail",d:4.0},{c:"amman",d:2.6},{c:"end",d:2.8}];
+  var SEG=[{c:null,d:1.8},{c:"hero",d:6.0},{c:"detail",d:3.6},{c:"amman",d:3.6},{c:"end",d:2.8}];
   var TOTAL=SEG.reduce(function(a,s){return a+s.d;},0);
   var starts=[];(function(){var t=0;for(var i=0;i<SEG.length;i++){starts.push(t);t+=SEG[i].d;}})();
   var blocks={}; [].forEach.call(document.querySelectorAll("[data-c]"),function(el){blocks[el.getAttribute("data-c")]=el;});
@@ -266,23 +282,25 @@ body{background:#000;color:#fff;font-family:var(--sans);display:flex;align-items
     var enterP = c01(el/1.8);
     var s = (i===0)? lerp(0.15,1,easeOutBack(enterP)) : 1;
     var dropY = (i===0)? lerp(1.1,0,easeOut(enterP)) : 0;
-    product.scale.setScalar(s);
+    var amI=3, amStart=starts[amI], amEnd=amStart+SEG[amI].d;
+    var amReveal=c01((el-(amStart-0.5))/0.8)*c01(1-(el-amEnd)/0.9);
+    product.scale.setScalar(s*(1-amReveal*0.16));
     product.rotation.y = el*0.5;
-    product.position.y = -0.45 + dropY + Math.sin(el*0.9)*0.05;
+    product.position.y = -0.45 - amReveal*0.14 + dropY + Math.sin(el*0.9)*0.05;
     // clouds drift + fade in
     var cloudOp=c01((el-0.4)/1.6)*0.9;
     for(var ci=0;ci<clouds.length;ci++){var cl=clouds[ci];cl.s.material.opacity=cloudOp;cl.s.position.x=cl.base[0]+Math.sin(el*0.15+ci)*0.25;cl.s.position.y=cl.base[1]+Math.sin(el*0.2+ci*1.7)*0.12;}
     // pool pulse
     poolPlane.material.opacity=lerp(0.28,0.46,0.5+0.5*Math.sin(el*1.2));
     // amman skyline reveal
-    var amI=3; var skOp=0;
-    if(el>=starts[amI]-0.4){ skOp=c01((el-(starts[amI]-0.4))/1.0); }
-    if(el>=starts[amI]+SEG[amI].d){ skOp=c01(1-(el-(starts[amI]+SEG[amI].d))/1.2); }
-    skyline.material.opacity=skOp*0.95;
-    // camera slow push-in + drift
-    camera.position.z=lerp(7.4,6.5,easeInOut(c01(el/TOTAL)));
-    camera.position.x=Math.sin(el*0.18)*0.28; camera.position.y=0.1+Math.sin(el*0.5)*0.04;
-    camera.lookAt(0,-0.55,0);
+    var skOp=0;
+    if(el>=amStart-0.4){ skOp=c01((el-(amStart-0.4))/1.0); }
+    if(el>=amEnd){ skOp=c01(1-(el-amEnd)/1.2); }
+    skyline.material.opacity=skOp;
+    // camera slow push-in + drift, pull back to reveal Amman
+    camera.position.z=lerp(7.4,6.5,easeInOut(c01(el/TOTAL)))+amReveal*1.9;
+    camera.position.x=Math.sin(el*0.18)*0.28; camera.position.y=0.1+Math.sin(el*0.5)*0.04+amReveal*0.55;
+    camera.lookAt(0,lerp(-0.55,-0.02,amReveal),0);
   }
   function frame(ts){ if(last==null)last=ts; var dt=(ts-last)/1000; last=ts; if(dt>0.1)dt=0.1; el+=dt; if(el>=TOTAL)el=0; update(); renderer.render(scene,camera); requestAnimationFrame(frame); }
   window.__TOTAL=TOTAL;
