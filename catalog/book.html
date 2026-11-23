@@ -499,9 +499,55 @@ function shapeSheet(alpha0, t, dir) {
    4. PORCELAIN PIECES (built in code; 1 unit ≈ 13 cm in real life)
    ========================================================================= */
 const MM_PER_UNIT = 130;
-function glazeMat(hex) { return new THREE.MeshPhysicalMaterial({ color: hex, roughness: 0.2, clearcoat: 1, clearcoatRoughness: 0.06, sheen: 0.25, sheenColor: 0xffffff }); }
-const glassMat = () => new THREE.MeshPhysicalMaterial({ color: 0xffffff, roughness: 0.03, transmission: 1, thickness: 0.35, ior: 1.5, transparent: true });
-const liquidMat = () => new THREE.MeshPhysicalMaterial({ color: LIQUID, roughness: 0.05, transmission: 0.8, thickness: 0.6, transparent: true, opacity: 0.85 });
+// Products get their own, stronger studio reflections (the table and book keep the soft ones).
+const studioEnv = scene.environment;
+function glazeMat(hex) {
+  return new THREE.MeshPhysicalMaterial({ color: hex, roughness: 0.16, clearcoat: 1, clearcoatRoughness: 0.03, sheen: 0.25, sheenColor: 0xffffff,
+    envMap: studioEnv, envMapIntensity: 1.05 });
+}
+/* Real-time glass: a transmissive object can't see other transmissive objects, so the
+   bottle is layered — refracting liquid + solid glass base inside, then a clear shell on
+   top that only ADDS reflections and bright edges (additive blending, black base colour). */
+const glassTint = () => new THREE.MeshPhysicalMaterial({ color: 0xeef8f4, roughness: 0, transparent: true, opacity: 0.07, depthWrite: false });
+const glassShine = side => new THREE.MeshPhysicalMaterial({ color: 0x000000, roughness: 0.02, metalness: 0,
+  specularIntensity: 1, envMap: studioEnv, envMapIntensity: 1.5, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side });
+// thick-glass edges: darker, slightly green where the surface turns away from the eye
+const glassEdge = () => new THREE.ShaderMaterial({
+  transparent: true, depthWrite: false,
+  uniforms: { edge: { value: new THREE.Color(0x4f6b62) }, strength: { value: 0.62 } },
+  vertexShader: `varying vec3 vN; varying vec3 vV;
+    void main() { vec4 mv = modelViewMatrix * vec4(position, 1.0); vN = normalize(normalMatrix * normal); vV = normalize(-mv.xyz); gl_Position = projectionMatrix * mv; }`,
+  fragmentShader: `uniform vec3 edge; uniform float strength; varying vec3 vN; varying vec3 vV;
+    void main() { float f = pow(1.0 - abs(dot(normalize(vN), normalize(vV))), 2.2); gl_FragColor = vec4(edge, clamp(f * strength, 0.0, 0.75)); }`
+});
+const solidGlass = () => new THREE.MeshPhysicalMaterial({ color: 0xffffff, roughness: 0.01, transmission: 1, thickness: 0.25, ior: 1.5,
+  attenuationColor: 0xd7efe6, attenuationDistance: 0.5, envMap: studioEnv, envMapIntensity: 1.6, specularIntensity: 1 });
+const liquidMat = () => new THREE.MeshPhysicalMaterial({ color: 0xffffff, roughness: 0, transmission: 1, thickness: 0.55, ior: 1.36,
+  attenuationColor: 0xd9a441, attenuationDistance: 0.6, envMap: studioEnv, envMapIntensity: 1.2, specularIntensity: 1 });
+function glassShell(geo) {
+  const g = new THREE.Group();
+  const tint = new THREE.Mesh(geo, glassTint()); tint.renderOrder = 2; tint.userData.noDraw = true;
+  const inner = new THREE.Mesh(geo, glassEdge()); inner.renderOrder = 2; inner.userData.noDraw = true;
+  const outer = new THREE.Mesh(geo, glassShine(THREE.FrontSide)); outer.renderOrder = 3;
+  g.add(tint, inner, outer);
+  return g;
+}
+let labelTex = null;
+function bottleLabel() {
+  if (!labelTex) {
+    const c = makeCanvas(512, 160), x = c.getContext("2d");
+    x.fillStyle = "#b8955a"; x.textAlign = "center";
+    x.font = '600 50px "Cormorant Garamond", Georgia, serif';
+    const sp = 6, txt = "RICCIOCAPRESE";
+    let wsum = 0; for (const ch of txt) wsum += x.measureText(ch).width + sp; wsum -= sp;
+    let cx = 256 - wsum / 2; x.textAlign = "left";
+    for (const ch of txt) { x.fillText(ch, cx, 92); cx += x.measureText(ch).width + sp; }
+    x.font = '500 26px "Cormorant Garamond", Georgia, serif'; x.textAlign = "center"; x.fillText("C  A  P  R  I", 256, 134);
+    x.fillRect(176, 20, 160, 2);
+    labelTex = tex(c);
+  }
+  return new THREE.MeshStandardMaterial({ map: labelTex, transparent: true, metalness: 0.7, roughness: 0.35, envMap: studioEnv, envMapIntensity: 1.4, depthWrite: false });
+}
 const reedMat = () => new THREE.MeshStandardMaterial({ color: 0xcfae84, roughness: 0.8 });
 
 function fib(n, minY) {
@@ -558,18 +604,26 @@ function anemone(mat) {
   return g;
 }
 function diffuser(topper, topY, scale = 1) {
-  const g = new THREE.Group(), w = 0.62, h = 0.78;
-  const bottle = new THREE.Mesh(new RoundedBoxGeometry(w, h, w, 5, 0.07), glassMat()); bottle.position.y = h / 2; g.add(bottle);
-  const liq = new THREE.Mesh(new RoundedBoxGeometry(w - 0.08, h * 0.6, w - 0.08, 3, 0.04), liquidMat()); liq.position.y = 0.05 + h * 0.3; g.add(liq);
-  const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.12, 0.12, 28), glassMat()); neck.position.y = h + 0.05; g.add(neck);
-  const label = new THREE.Mesh(new THREE.PlaneGeometry(0.3, 0.08), new THREE.MeshStandardMaterial({ color: 0xb59a5a, transparent: true, opacity: 0.7 }));
-  label.position.set(0, h * 0.45, w / 2 + 0.002); g.add(label);
+  const g = new THREE.Group(), w = 0.62, h = 0.78, wall = 0.035, base = 0.11;
+  // thick solid glass base
+  const foot = new THREE.Mesh(new RoundedBoxGeometry(w - 0.01, base, w - 0.01, 4, 0.05), solidGlass()); foot.position.y = base / 2; g.add(foot);
+  // fragrance: flat surface, a little below the shoulder
+  const liqH = h * 0.56;
+  const liq = new THREE.Mesh(new RoundedBoxGeometry(w - 2 * wall, liqH, w - 2 * wall, 4, 0.05), liquidMat()); liq.position.y = base + liqH / 2; g.add(liq);
+  // the bottle itself (reflection shell) + neck and lip
+  const shell = glassShell(new RoundedBoxGeometry(w, h, w, 6, 0.075)); shell.position.y = h / 2; g.add(shell);
+  const neck = glassShell(new THREE.CylinderGeometry(0.1, 0.115, 0.13, 40)); neck.position.y = h + 0.055; g.add(neck);
+  const lip = new THREE.Mesh(new THREE.TorusGeometry(0.1, 0.014, 12, 40), solidGlass()); lip.rotation.x = Math.PI / 2; lip.position.y = h + 0.12; g.add(lip);
+  const label = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 0.125), bottleLabel());
+  label.position.set(0, h * 0.5, w / 2 + 0.004); label.renderOrder = 4; label.userData.noDraw = true; g.add(label);
+  // reeds pivot at the neck: they reach down into the fragrance and fan out above
   for (let i = 0; i < 7; i++) {
-    const a = (i / 7) * Math.PI * 2, tilt = 0.1 + (i % 3) * 0.05;
-    const reed = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 1.7, 6), reedMat());
-    reed.position.set(Math.cos(a) * 0.05, h + 0.7, Math.sin(a) * 0.05);
-    reed.rotation.set(Math.sin(a) * tilt, 0, -Math.cos(a) * tilt);
-    reed.userData.reed = true; g.add(reed);
+    const a = (i / 7) * Math.PI * 2, tilt = 0.08 + (i % 3) * 0.045;
+    const pivot = new THREE.Group(); pivot.position.set(0, h + 0.06, 0);
+    pivot.rotation.set(Math.sin(a) * tilt, 0, -Math.cos(a) * tilt);
+    const reed = new THREE.Mesh(new THREE.CylinderGeometry(0.011, 0.011, 2.25, 6), reedMat());
+    reed.position.set(Math.cos(a) * 0.035, 0.45, Math.sin(a) * 0.035);
+    reed.userData.reed = true; reed.castShadow = true; pivot.add(reed); g.add(pivot);
   }
   topper.position.y = h + 0.1 + topY; g.add(topper);
   g.scale.setScalar(scale);
@@ -645,17 +699,21 @@ function buildPiece(i, finishIdx) {
     case "anemone": m = diffuser(anemone(mat), 0.06); break;
     case "regina": m = diffuser(urchin(mat, { r: 0.33, flat: 0.95, n: 220, sr: 0.04, sh: 0.18, minY: -0.35, jit: 0.25 }), 0.24, 1.08); break;
   }
-  m.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+  m.traverse(o => {
+    if (!o.isMesh) return;
+    const see = o.material.transparent || o.material.transmission > 0;
+    o.castShadow = !see; o.receiveShadow = !see;   // glass doesn't throw a solid shadow
+  });
   m.userData.glazeMats = mats;
   return m;
 }
-const PIECE_SCALE = 0.31;      // fits the piece inside the page
+const PIECE_SCALE = 0.42;      // stands proud over the page, like a real pop-up
 
 // holder → fold → spin → model
 function makeSlot() {
   const holder = new THREE.Group(), fold = new THREE.Group(), spin = new THREE.Group();
   holder.add(fold); fold.add(spin);
-  const contact = new THREE.Mesh(new THREE.PlaneGeometry(0.42, 0.42), new THREE.MeshBasicMaterial({ map: softShadowTexture(), transparent: true, depthWrite: false }));
+  const contact = new THREE.Mesh(new THREE.PlaneGeometry(0.58, 0.58), new THREE.MeshBasicMaterial({ map: softShadowTexture(), transparent: true, depthWrite: false }));
   contact.rotation.x = -Math.PI / 2; contact.position.y = 0.002; holder.add(contact);
   return { holder, fold, spin, contact, model: null, index: -1, pop: 0, popAnim: null };
 }
@@ -697,7 +755,7 @@ function technicalDrawing(i) {
   let id = 1;
   m.traverse(o => {
     if (!o.isMesh) return;
-    if (o.userData.reed) { o.visible = false; return; }
+    if (o.userData.reed || o.userData.noDraw) { o.visible = false; return; }
     [].concat(o.material).forEach(mm => mm.dispose());
     o.material = new THREE.MeshNormalMaterial(); id++;
   });
@@ -1009,7 +1067,7 @@ function fitPoints() {
   const pts = [], mobile = isMobile();
   const xs = mobile ? [-PW, 0] : [-PW, PW];
   for (const x of xs) for (const z of [-PH / 2, PH / 2]) pts.push(new THREE.Vector3(x, 0, z), new THREE.Vector3(x, 0.08, z));
-  pts.push(new THREE.Vector3(-SP_S * PW, 0.95, 0.02));   // top of the piece with its reeds
+  pts.push(new THREE.Vector3(-SP_S * PW, 0.85, 0.02));   // top of the piece (reed tips may cross the header)
   return pts.map(p => book.localToWorld(p));
 }
 function fitCamera(soft) {
@@ -1054,7 +1112,7 @@ function updateCamTween(now) {
   if (t >= 1) { const d = camTween.done; camTween = null; d && d(); }
 }
 let zoomed = false;
-function pieceCenter() { return book.localToWorld(new THREE.Vector3(-SP_S * PW, 0.32, 0.02)); }
+function pieceCenter() { return book.localToWorld(new THREE.Vector3(-SP_S * PW, 0.42, 0.02)); }
 function zoomPiece() { zoomed = true; $("tZoom").classList.add("on"); return tweenCam({ target: pieceCenter(), dist: fitState.dist * 0.42, polar: 0.98, az: 0.55 }, 1100); }
 function stopZoom() { if (!zoomed) return; zoomed = false; $("tZoom").classList.remove("on"); }
 function home() { stopZoom(); return tweenCam({ target: fitState.target, dist: fitState.dist, polar: POLAR, az: 0 }, 900); }
