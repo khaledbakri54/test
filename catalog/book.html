@@ -190,6 +190,8 @@ import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 
 /* =========================================================================
    1. SHOP DATA  (defaults — the owner panel edits a copy of this)
@@ -573,10 +575,70 @@ function diffuser(topper, topY, scale = 1) {
   g.scale.setScalar(scale);
   return g;
 }
+/* ---------- realistic models (Higgsfield → Hunyuan 3D, white glaze, tinted live) ----------
+   Each GLB is normalised once: centred, base on y = 0, scaled to the size of the
+   code-built piece it replaces. If a file can't load (e.g. opened from disk),
+   the code-built piece is used instead. */
+const GLB_FILES = {
+  riccio: { url: "models/riccio.glb", fit: "width", size: 0.8 },
+  dalia: { url: "models/dalia.glb", fit: "width", size: 0.86 },
+  lady: { url: "models/lady-capri.glb", fit: "height", size: 1.5 }
+};
+const glbTemplates = {};
+const glbMaps = new WeakMap();   // geometry → its source textures (shared by every clone)
+async function loadModels() {
+  const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
+  await Promise.all(Object.entries(GLB_FILES).map(async ([shape, f]) => {
+    try {
+      const gltf = await loader.loadAsync(f.url);
+      const root = gltf.scene;
+      root.updateMatrixWorld(true);
+      const box = new THREE.Box3().setFromObject(root), size = box.getSize(new THREE.Vector3()), ctr = box.getCenter(new THREE.Vector3());
+      const k = f.size / (f.fit === "height" ? size.y : Math.max(size.x, size.z));
+      const wrap = new THREE.Group(); wrap.add(root);
+      root.position.set(-ctr.x, -box.min.y, -ctr.z);
+      wrap.scale.setScalar(k);
+      root.traverse(o => {
+        if (!o.isMesh) return;
+        const src = o.material;
+        o.userData.shared = true;   // geometry/textures belong to the template: never dispose
+        glbMaps.set(o.geometry, { map: src.map || null, normalMap: src.normalMap || null });
+        if (src.map) src.map.colorSpace = THREE.SRGBColorSpace;
+      });
+      glbTemplates[shape] = { wrap, height: size.y * k };
+    } catch (e) { /* fall back to the code-built piece */ }
+  }));
+}
+function fromGLB(shape, mats, hex) {
+  const t = glbTemplates[shape], obj = t.wrap.clone(true);
+  obj.traverse(o => {
+    if (!o.isMesh) return;
+    const m = glazeMat(hex);
+    const maps = glbMaps.get(o.geometry) || {};
+    m.map = maps.map || null; m.normalMap = maps.normalMap || null;
+    m.color.multiplyScalar(1.12);          // texture is white porcelain with baked shading
+    o.material = m; mats.push(m);
+  });
+  return obj;
+}
+function addReeds(g, yTop) {
+  for (let i = 0; i < 7; i++) {
+    const a = (i / 7) * Math.PI * 2, tilt = 0.1 + (i % 3) * 0.05;
+    const reed = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 1.7, 6), reedMat());
+    reed.position.set(Math.cos(a) * 0.04, yTop + 0.65, Math.sin(a) * 0.04);
+    reed.rotation.set(Math.sin(a) * tilt, 0, -Math.cos(a) * tilt);
+    reed.userData.reed = true; g.add(reed);
+  }
+}
 function buildPiece(i, finishIdx) {
-  const p = DATA.products[i], mat = glazeMat(GLAZE[DEFAULTS.products[i].finishes[finishIdx].g]);
+  const hex = GLAZE[DEFAULTS.products[i].finishes[finishIdx].g], mat = glazeMat(hex);
+  const mats = [mat], shape = DEFAULTS.products[i].shape;
   let m;
-  switch (DEFAULTS.products[i].shape) {
+  if (glbTemplates[shape] && (shape === "riccio" || shape === "dalia")) {
+    m = diffuser(fromGLB(shape, mats, hex), -0.03);
+  } else if (glbTemplates[shape] && shape === "lady") {
+    m = new THREE.Group(); m.add(fromGLB("lady", mats, hex)); addReeds(m, glbTemplates.lady.height - 0.15);
+  } else switch (shape) {
     case "riccio": m = diffuser(urchin(mat), 0.2); break;
     case "lady": m = diffuser(urchin(mat, { r: 0.3, flat: 1.45, n: 300, sr: 0.032, sh: 0.07, minY: -0.4 }), 0.33); break;
     case "dalia": m = diffuser(dalia(mat), -0.05); break;
@@ -584,7 +646,7 @@ function buildPiece(i, finishIdx) {
     case "regina": m = diffuser(urchin(mat, { r: 0.33, flat: 0.95, n: 220, sr: 0.04, sh: 0.18, minY: -0.35, jit: 0.25 }), 0.24, 1.08); break;
   }
   m.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
-  m.userData.glaze = mat;
+  m.userData.glazeMats = mats;
   return m;
 }
 const PIECE_SCALE = 0.31;      // fits the piece inside the page
@@ -613,7 +675,7 @@ function fillSlot(slot, i) {
 function clearSlot(slot) {
   if (!slot.model) return;
   slot.spin.remove(slot.model);
-  slot.model.traverse(o => { if (o.isMesh) { o.geometry.dispose(); [].concat(o.material).forEach(m => m.dispose()); } });
+  slot.model.traverse(o => { if (o.isMesh) { if (!o.userData.shared) o.geometry.dispose(); [].concat(o.material).forEach(m => m.dispose()); } });
   slot.model = null; slot.index = -1;
 }
 const pageSlot = makeSlot(), sheetSlot = makeSlot();
@@ -636,8 +698,8 @@ function technicalDrawing(i) {
   m.traverse(o => {
     if (!o.isMesh) return;
     if (o.userData.reed) { o.visible = false; return; }
-    const c = new THREE.Color().setHSL((id * 0.618) % 1, 0.9, 0.35 + (id % 3) * 0.15); id++;
-    o.material = new THREE.MeshBasicMaterial({ color: c });
+    [].concat(o.material).forEach(mm => mm.dispose());
+    o.material = new THREE.MeshNormalMaterial(); id++;
   });
   sc.add(m);
   m.updateMatrixWorld(true);
@@ -655,10 +717,13 @@ function technicalDrawing(i) {
     const gl = drawRenderer.getContext(), px = new Uint8Array(DRW * DRH * 4);
     gl.readPixels(0, 0, DRW, DRH, gl.RGBA, gl.UNSIGNED_BYTE, px);
     const out = makeCanvas(DRW, DRH), ox = out.getContext("2d"), od = ox.createImageData(DRW, DRH);
-    const key = (x, y) => { const k = ((DRH - 1 - y) * DRW + x) * 4; return px[k + 3] < 10 ? -1 : (px[k] << 16) | (px[k + 1] << 8) | px[k + 2]; };
+    // ink where the surface normal turns sharply, or at the silhouette
+    const at = (x, y) => ((DRH - 1 - y) * DRW + x) * 4;
+    const differs = (a, b) => (px[a + 3] < 10) !== (px[b + 3] < 10) ||
+      (px[a + 3] >= 10 && Math.abs(px[a] - px[b]) + Math.abs(px[a + 1] - px[b + 1]) + Math.abs(px[a + 2] - px[b + 2]) > 95);
     for (let y = 1; y < DRH - 1; y++) for (let x = 1; x < DRW - 1; x++) {
-      const k0 = key(x, y);
-      if (k0 !== key(x + 1, y) || k0 !== key(x, y + 1) || k0 !== key(x - 1, y) || k0 !== key(x, y - 1)) {
+      const a = at(x, y);
+      if (differs(a, at(x + 1, y)) || differs(a, at(x, y + 1))) {
         const o = (y * DRW + x) * 4; od.data[o] = 34; od.data[o + 1] = 44; od.data[o + 2] = 58; od.data[o + 3] = 235;
       }
     }
@@ -669,7 +734,7 @@ function technicalDrawing(i) {
     const [x1, y0] = toPx(new THREE.Vector3(dir.x ? ctr.x : box.max.x, box.max.y, dir.x ? box.min.z : ctr.z));
     views.push({ img: out, x0: Math.min(x0, x1), x1: Math.max(x0, x1), y0, y1 });
   }
-  m.traverse(o => { if (o.isMesh) { o.geometry.dispose(); o.material.dispose(); } });
+  m.traverse(o => { if (o.isMesh) { if (!o.userData.shared) o.geometry.dispose(); o.material.dispose(); } });
   const mm = v => Math.round(v * MM_PER_UNIT / 5) * 5;
   drawings[i] = { views, w: mm(size.x), d: mm(size.z), h: mm(size.y) };
   return drawings[i];
@@ -918,7 +983,7 @@ function setFinish(k, pulse = true) {
   finishSel[cur] = k;
   invalidate(cur); showPage(cur);
   const g = GLAZE[DEFAULTS.products[cur].finishes[k].g];
-  if (pageSlot.model) pageSlot.model.userData.glaze.color.set(g);
+  if (pageSlot.model) pageSlot.model.userData.glazeMats.forEach(m => { m.color.set(g); if (m.map) m.color.multiplyScalar(1.12); });
   if (pulse) pageSlot.pulse = performance.now();
   syncUI();
 }
@@ -1254,7 +1319,7 @@ async function boot() {
     document.fonts.load(ARF(400, 40), "مرحبا"), document.fonts.load(ARF(500, 40), "مرحبا"), document.fonts.load(ARF(600, 40), "مرحبا")
   ]);
   await Promise.race([fontsReady, sleep(5000)]);
-  await initStorage();
+  await Promise.all([initStorage(), Promise.race([loadModels(), sleep(15000)])]);
   showPage(cur);
   fillSlot(pageSlot, cur); setPop(pageSlot, 0);
   syncUI();

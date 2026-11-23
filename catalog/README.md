@@ -176,3 +176,40 @@ There were no console errors.
 
 - The pieces are built in code. They're close to the real designs, but not scans.
 - Saving from the owner panel on GitHub Pages only saves on that one device. Shared editing needs it published as a Claude artifact, or a small backend.
+
+---
+
+# Part 3 — Realistic 3D models from Higgsfield
+
+Three pieces in the book now use realistic 3D models instead of code-built shapes: **Riccio, Dalia and Lady Capri**. Anemone and Regina are still code-built.
+
+## How they were made
+
+1. **Reference photos:** imported the real product photos from ricciocapresejo.com into Higgsfield.
+2. **Clean studio photos (GPT Image 2.6):** made one photo of each topper on its own, in white glaze on a white background, for all 5 pieces. 0.75 credits each.
+3. **3D models (Hunyuan 3D v3, image to 3D, 40k faces):** made from the Riccio, Dalia and Lady Capri photos. 15 credits each.
+4. **Compression (gltf-transform):** meshopt geometry, WebP textures at 1536 px, light simplification.
+   - Riccio: 10.4 MB → 384 KB
+   - Dalia: 12.4 MB → 439 KB
+   - Lady Capri: 10.7 MB → 334 KB
+5. **Files:** saved in `catalog/models/`.
+
+Credits used: about 49 of 52.
+
+## How they're used in `book.html`
+
+- **One white model per piece.** The page tints it to whichever glaze is selected, so all 27 colours work without a separate model for each colour.
+- **Riccio and Dalia:** only the porcelain topper is a Higgsfield model. It sits on the code-built glass bottle, with its liquid and reeds, because image-to-3D can't do see-through glass well.
+- **Lady Capri:** the whole piece is one model (a porcelain cube with the urchin on top), plus code-built reeds.
+- **Same behaviour as before:** the models pop up, fold and ride the page turn exactly like the code-built pieces.
+- **Technical drawings:** now traced from the models' surface normals.
+- **Loading:** GLTFLoader with MeshoptDecoder.
+
+**Important:** the models load over http(s) (GitHub Pages or any web host). If you open `book.html` straight from disk (`file://`), the browser blocks the model files, so the page falls back to the code-built pieces automatically.
+
+## Adding Anemone and Regina later
+
+The clean topper photos for both are already made in your Higgsfield account. To convert them:
+- Converting both costs about 30 more credits.
+- Save the files as `models/anemone.glb` and `models/regina.glb`.
+- Add them to `GLB_FILES` in `book.html`.
