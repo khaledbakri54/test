@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ricciocaprese — 3D Catalogue</title>
+<meta name="theme-color" content="#f7f3ec">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #f7f3ec;
+    --paper: #fcfcfc;
+    --navy: #17456f;
+    --sky: #a8c8e9;
+    --ink: #1b2328;
+    --muted: #6b7378;
+    --line: #e4ddd1;
+    --gold: #b7852f;
+    --green: #3f7a5a;
+    --serif: "Cormorant Garamond", Georgia, serif;
+    --sans: "Inter", system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { background: var(--cream); color: var(--ink); font-family: var(--sans); -webkit-font-smoothing: antialiased; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  img { display: block; max-width: 100%; }
+
+  /* ---------- Hero ---------- */
+  .hero {
+    min-height: 100vh; min-height: 100svh; display: grid; place-items: start center; text-align: center; padding: 7vh 16px 48px;
+    background: linear-gradient(180deg, #e3ecf4 0%, #eef2f3 45%, var(--cream) 100%);
+    position: relative; overflow: hidden;
+  }
+  .hero canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .hero-inner { position: relative; z-index: 2; max-width: 720px; pointer-events: none; }
+  .hero-inner a { pointer-events: auto; }
+  .eyebrow { font-size: 11px; letter-spacing: .28em; text-transform: uppercase; color: var(--muted); }
+  .logo-mark { width: 120px; margin: 18px auto 6px; color: var(--navy); }
+  .wordmark { font-family: var(--serif); font-weight: 500; color: var(--navy); font-size: clamp(40px, 9vw, 96px); letter-spacing: .04em; line-height: 1; }
+  .tagline { font-family: var(--serif); font-style: italic; color: var(--navy); font-size: clamp(24px, 4vw, 36px); margin-top: 14px; }
+  .lead { font-family: var(--serif); font-size: 20px; color: #555; line-height: 1.6; margin: 18px auto 0; max-width: 420px; }
+  .cta { display: inline-flex; gap: 12px; align-items: center; margin-top: 32px; color: var(--navy); text-decoration: none; font-size: 13px; font-weight: 600; letter-spacing: .24em; text-transform: uppercase; }
+  .cta span { transition: transform .3s; }
+  .cta:hover span { transform: translateX(6px); }
+  .hint { position: absolute; bottom: 8px; left: 0; right: 0; z-index: 2; font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); }
+
+  /* ---------- Toolbar ---------- */
+  .bar { position: sticky; top: 0; z-index: 20; background: rgba(247,243,236,.88); backdrop-filter: blur(12px); border-bottom: 1px solid var(--line); }
+  .bar-in { max-width: 1240px; margin: 0 auto; padding: 12px 16px; display: flex; gap: 12px; align-items: center; }
+  .chips { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; flex: 1; }
+  .chips::-webkit-scrollbar { display: none; }
+  .chip { white-space: nowrap; padding: 8px 14px; border: 1px solid var(--line); border-radius: 999px; font-size: 12px; letter-spacing: .06em; color: var(--muted); transition: all .2s; }
+  .chip:hover { color: var(--navy); border-color: var(--navy); }
+  .chip.on { background: var(--navy); color: #fff; border-color: var(--navy); }
+  .search { width: 180px; padding: 8px 14px; border: 1px solid var(--line); border-radius: 999px; background: var(--paper); font: inherit; font-size: 13px; }
+  .search:focus { outline: none; border-color: var(--navy); }
+  .cart-btn { position: relative; padding: 8px; color: var(--navy); }
+  .cart-btn b { position: absolute; top: 0; right: -2px; min-width: 18px; height: 18px; border-radius: 9px; background: var(--navy); color: #fff; font-size: 10px; display: grid; place-items: center; }
+
+  /* ---------- Collection ---------- */
+  main { max-width: 1240px; margin: 0 auto; padding: 48px 16px 96px; }
+  .section-title { font-family: var(--serif); font-weight: 400; font-size: clamp(36px, 5vw, 52px); }
+  .section-sub { font-family: var(--serif); font-style: italic; color: var(--navy); font-size: 20px; margin-top: 4px; }
+  .group { margin-top: 56px; }
+  .group h3 { font-family: var(--serif); font-weight: 400; font-size: 34px; }
+  .group p.sub { font-family: var(--serif); font-style: italic; color: var(--navy); font-size: 18px; margin: 2px 0 20px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 24px; }
+  .card { text-align: left; animation: rise .6s both; }
+  @keyframes rise { from { opacity: 0; transform: translateY(16px); } }
+  .thumb { position: relative; aspect-ratio: 1; background: linear-gradient(#f1f1f1, #fafafa); overflow: hidden; box-shadow: 0 6px 24px rgba(23,69,111,.07); }
+  .thumb img { width: 100%; height: 100%; object-fit: cover; transition: transform .6s ease; }
+  .card:hover .thumb img { transform: scale(1.06); }
+  .badge3d { position: absolute; top: 10px; right: 10px; background: rgba(255,255,255,.9); color: var(--navy); font-size: 10px; font-weight: 600; letter-spacing: .12em; padding: 6px 9px; border-radius: 999px; display: flex; gap: 5px; align-items: center; opacity: .9; transition: all .3s; }
+  .card:hover .badge3d { background: var(--navy); color: #fff; }
+  .card h4 { font-family: var(--serif); font-weight: 400; font-size: 22px; margin-top: 14px; }
+  .meta { font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); margin-top: 2px; }
+  .swatches { display: flex; margin-top: 10px; height: 4px; width: 64px; }
+  .swatches i { flex: 1; }
+  .row { display: flex; justify-content: space-between; align-items: baseline; margin-top: 12px; }
+  .price { font-family: var(--serif); font-size: 22px; }
+  .price small { font-size: 11px; font-style: italic; color: var(--muted); margin-left: 3px; }
+  .stock { font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--green); }
+  .stock.low { color: var(--gold); }
+  .stock.out { color: var(--muted); }
+  .empty { margin-top: 48px; font-family: var(--serif); font-size: 22px; color: var(--muted); }
+
+  /* ---------- 3D viewer ---------- */
+  .viewer { position: fixed; inset: 0; z-index: 50; display: grid; grid-template-columns: 1.4fr 1fr; background: var(--cream); opacity: 0; pointer-events: none; transition: opacity .35s; }
+  .viewer.open { opacity: 1; pointer-events: auto; }
+  .stage { position: relative; background: radial-gradient(ellipse at 50% 40%, #ffffff 0%, #eef0ef 55%, #e3e6e5 100%); }
+  .stage canvas { width: 100% !important; height: 100% !important; display: block; cursor: grab; touch-action: none; }
+  .stage canvas:active { cursor: grabbing; }
+  .stage-tools { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; }
+  .tool { width: 42px; height: 42px; border-radius: 50%; background: #fff; box-shadow: 0 4px 14px rgba(0,0,0,.08); display: grid; place-items: center; color: var(--navy); transition: all .2s; }
+  .tool:hover, .tool.on { background: var(--navy); color: #fff; }
+  .drag-hint { position: absolute; top: 20px; left: 0; right: 0; text-align: center; font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); pointer-events: none; }
+  .close { position: absolute; top: 16px; left: 16px; z-index: 3; font-size: 12px; letter-spacing: .2em; text-transform: uppercase; color: var(--navy); padding: 8px 4px; }
+  .panel { padding: 72px 48px 40px; overflow-y: auto; border-left: 1px solid var(--line); background: var(--cream); }
+  .panel .coll { font-size: 11px; letter-spacing: .28em; text-transform: uppercase; color: var(--muted); }
+  .panel h2 { font-family: var(--serif); font-weight: 400; font-size: 48px; line-height: 1.05; margin-top: 8px; }
+  .panel .quote { font-family: var(--serif); font-style: italic; color: var(--navy); font-size: 20px; margin-top: 6px; }
+  .panel .desc { font-family: var(--serif); font-size: 18px; line-height: 1.6; color: #4a5257; margin-top: 18px; }
+  .label { font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); margin: 28px 0 12px; display: flex; justify-content: space-between; }
+  .label em { font-style: normal; color: var(--navy); letter-spacing: .1em; }
+  .colours { display: flex; flex-wrap: wrap; gap: 10px; }
+  .colours button { width: 30px; height: 30px; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(0,0,0,.12); position: relative; transition: transform .2s; }
+  .colours button:hover { transform: scale(1.12); }
+  .colours button.on::after { content: ""; position: absolute; inset: -5px; border-radius: 50%; border: 1.5px solid var(--navy); }
+  .sizes { display: flex; flex-wrap: wrap; gap: 8px; }
+  .sizes button { padding: 10px 16px; border: 1px solid var(--line); font-size: 12px; letter-spacing: .08em; background: var(--paper); transition: all .2s; }
+  .sizes button.on { border-color: var(--navy); color: var(--navy); box-shadow: inset 0 0 0 1px var(--navy); }
+  .sizes button:disabled { opacity: .45; text-decoration: line-through; cursor: not-allowed; }
+  .buy { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--line); }
+  .buy .price { font-size: 34px; }
+  .add { flex: 1; max-width: 240px; padding: 16px; background: var(--ink); color: #fff; font-size: 12px; letter-spacing: .24em; text-transform: uppercase; transition: background .2s; }
+  .add:hover { background: var(--navy); }
+  .add:disabled { background: #b9bcbd; cursor: not-allowed; }
+  .note { font-family: var(--serif); font-style: italic; color: var(--muted); font-size: 15px; margin-top: 14px; }
+
+  .toast { position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 120px); background: var(--ink); color: #fff; padding: 14px 22px; font-size: 13px; letter-spacing: .06em; z-index: 80; transition: transform .35s; }
+  .toast.show { transform: translate(-50%, 0); }
+
+  footer { text-align: center; padding: 48px 16px 64px; border-top: 1px solid var(--line); font-family: var(--serif); color: var(--muted); }
+  footer a { color: var(--navy); }
+
+  @media (max-width: 860px) {
+    .viewer { grid-template-columns: 1fr; grid-template-rows: 56vh 1fr; }
+    .panel { padding: 24px 16px 32px; border-left: 0; border-top: 1px solid var(--line); }
+    .panel h2 { font-size: 36px; }
+    .drag-hint { display: none; }
+    .search { width: 120px; }
+    .grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+    .card h4 { font-size: 19px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="hero" id="top">
+  <canvas id="heroCanvas" aria-hidden="true"></canvas>
+  <div class="hero-inner">
+    <p class="eyebrow">Official retailer · Jordan</p>
+    <svg class="logo-mark" viewBox="0 0 120 60" fill="currentColor" aria-hidden="true">
+      <g transform="translate(60 58)">
+        <path id="ray" d="M0 0 C-3 -16 -2 -34 0 -50 C2 -34 3 -16 0 0Z"/>
+        <use href="#ray" transform="rotate(-20)"/><use href="#ray" transform="rotate(20)"/>
+        <use href="#ray" transform="rotate(-40) scale(.85)"/><use href="#ray" transform="rotate(40) scale(.85)"/>
+        <use href="#ray" transform="rotate(-60) scale(.7)"/><use href="#ray" transform="rotate(60) scale(.7)"/>
+        <use href="#ray" transform="rotate(-78) scale(.55)"/><use href="#ray" transform="rotate(78) scale(.55)"/>
+      </g>
+    </svg>
+    <h1 class="wordmark">RICCIOCAPRESE</h1>
+    <p class="tagline">Capri, in porcelain — now in 3D.</p>
+    <p class="lead">Turn every piece in your hands. Choose its colour, see it from every side, before it reaches your home.</p>
+    <a class="cta" href="#collection">Explore the collection <span>→</span></a>
+  </div>
+  <p class="hint">Drag the urchin</p>
+</header>
+
+<div class="bar">
+  <div class="bar-in">
+    <div class="chips" id="chips"></div>
+    <input class="search" id="search" type="search" placeholder="Search…" aria-label="Search products">
+    <button class="cart-btn" id="cartBtn" aria-label="Cart">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 8h14l-1.2 12H6.2L5 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>
+      <b id="cartCount">0</b>
+    </button>
+  </div>
+</div>
+
+<main id="collection">
+  <h2 class="section-title">The collection</h2>
+  <p class="section-sub">Handcrafted in Capri. Tap any piece to see it in 3D.</p>
+  <div id="groups"></div>
+</main>
+
+<footer>
+  <p>Ricciocaprese Jordan · <a href="https://www.instagram.com/ricciocaprese.jo">@ricciocaprese.jo</a></p>
+  <p style="margin-top:6px;font-size:14px">3D views are illustrations of each design; glaze and shape vary slightly as every piece is handmade.</p>
+</footer>
+
+<section class="viewer" id="viewer" aria-modal="true" role="dialog">
+  <div class="stage" id="stage">
+    <button class="close" id="close">← Catalogue</button>
+    <p class="drag-hint">Drag to turn · Scroll or pinch to zoom</p>
+    <div class="stage-tools">
+      <button class="tool on" id="tSpin" title="Auto-rotate" aria-label="Auto-rotate">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M20 12a8 8 0 1 1-3-6.2"/><path d="M20 4v5h-5"/></svg></button>
+      <button class="tool" id="tReset" title="Reset view" aria-label="Reset view">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg></button>
+      <button class="tool" id="tZoom" title="Close-up" aria-label="Close-up">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="7"/><path d="M21 21l-5-5M11 8v6M8 11h6"/></svg></button>
+    </div>
+  </div>
+  <div class="panel" id="panel"></div>
+</section>
+
+<div class="toast" id="toast"></div>
+
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+<script type="module">
+import * as THREE from "three";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
+import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
+
+/* =====================================================================
+   DATA — edit here to update the catalogue
+   ===================================================================== */
+const IMG = "https://www.ricciocapresejo.com/img/";
+
+const COLOURS = {
+  "Acquamarina": "#5fb9b3", "Avion": "#7392b5", "Azzurro Capri": "#3fa7dc", "Bianco": "#f3f1ea",
+  "Blu Capri": "#1f5ea8", "Blu Notte": "#1c2b4d", "Bordeaux": "#6e1b2c", "Bronzo": "#8c6a3c",
+  "Ciclamino": "#c43579", "Cipria": "#e9c4ba", "Corallo": "#f0765e", "Giallo": "#f2c232",
+  "Grigio": "#8d8f91", "Grigio Perla": "#cacac4", "Lilla": "#b39cd1", "Marrone": "#5a3b2a",
+  "Mattone": "#a6492f", "Moka": "#6b4a3a", "Nero": "#1b1b1b", "Prugna": "#5b2246",
+  "Rosa": "#f0a4b6", "Rosso": "#d1262c", "Tortora": "#a99b89", "Verde Acqua": "#6dc3a9",
+  "Verde Militare": "#4f5a3a", "Verde Oliva": "#7a7d3a", "Verde Ramino": "#1f5e4a"
+};
+const PALETTE_MAIN = ["Rosso", "Azzurro Capri", "Blu Capri", "Blu Notte", "Bianco", "Corallo", "Ciclamino", "Lilla", "Verde Ramino", "Giallo", "Tortora", "Nero"];
+
+// shape: which 3D model to build. size: M-number drives scale.
+const GROUPS = [
+  { name: "Riccio", sub: "The sea urchin, in porcelain.", cat: "Diffusers", shape: "riccio",
+    desc: "The piece that started it all. A porcelain sea urchin, glazed by hand in Capri, crowning a glass diffuser of your chosen fragrance.",
+    items: [["M8", "100 ml", 55, "in", "t106-79f0f25e"], ["M12", "200 ml", 100, "in", "t99-e732bac1"], ["M18", "500 ml", 225, "out", "t100-b3c2939b"]] },
+  { name: "Lady Capri", sub: "An icon in a new silhouette.", cat: "Diffusers", shape: "lady",
+    desc: "The Riccio, drawn taller and more elegant — a slender urchin that brings a quiet sense of occasion to any shelf.",
+    items: [["M8", "100 ml", 65, "in", "t50-900d7954"], ["M10", "200 ml", 115, "in", "t47-f07ea0ed"], ["M18", "500 ml", 250, "low", "t49-7be63439"]] },
+  { name: "Dalia", sub: "Petals in bloom.", cat: "Diffusers", shape: "dalia",
+    desc: "Layer upon layer of hand-formed porcelain petals, opening like a dahlia in the Capri sun.",
+    items: [["M8", "100 ml", 55, "in", "t28-e11ae9e0"], ["M12", "200 ml", 100, "in", "t23-d80e3ba7"], ["M18", "500 ml", 225, "out", "t22-c8500357"]] },
+  { name: "Anemone", sub: "Born from the sea.", cat: "Diffusers", shape: "anemone",
+    desc: "Soft, tapering tentacles gathered into a sea anemone — a piece of the Faraglioni reef for your home.",
+    items: [["M8", "100 ml", 55, "in", "t6-4dd2c204"], ["M12", "200 ml", 100, "in", "t9-4b3373dd"], ["M18", "500 ml", 225, "low", "t8-97ed6d72"]] },
+  { name: "New Fragrance", sub: "The sea urchin, reimagined.", cat: "Diffusers", shape: "dome",
+    desc: "A low, sculptural urchin with fine spines that diffuses scent from within. Striking from every angle.",
+    items: [["M18", "Riccio", 160, "low", "t96-b469319c"], ["M24", "Riccio", 260, "low", "t88-31feb98d"]] },
+  { name: "Fiori di Capri", sub: "A garden of fragrance.", cat: "Diffusers", shape: "fiori",
+    desc: "Porcelain lilies rising from a clear block — one, two or three blooms to make your own bouquet.",
+    items: [["1", "Single bloom", 55, "in", "t43-7b037b78"], ["2", "Two blooms", 99, "in", "t32-9d67fcd6"], ["3", "Three blooms", 175, "low", "t36-fb4dcbe6"]] },
+  { name: "Tulipano", sub: "Inspired by a timeless flower.", cat: "Diffusers", shape: "tulip",
+    desc: "A single porcelain tulip on a glass diffuser — simple, graceful, timeless.",
+    items: [["", "200 ml", 120, "in", "t110-367b5813"]] },
+  { name: "Regina", sub: "The Riccio, evolved.", cat: "Diffusers", shape: "regina",
+    desc: "A crowned urchin with longer, bolder spines — the queen of the collection.",
+    items: [["", "150 ml", 85, "in", "t80-3d39f33d"], ["", "300 ml", 140, "low", "t76-9215a5da"], ["", "600 ml", 250, "low", "t83-cecdc553"]] },
+  { name: "Fontelina", sub: "Inspired by Capri’s 1950s glamour.", cat: "Decor", shape: "fontelina",
+    desc: "Candy stripes straight from the beach clubs of the 1950s, on a 12 cm porcelain piece.",
+    items: [["12 cm", "One colour", 70, "out", "t61-673cd611"], ["12 cm", "Multicolour · White", 75, "out", "t60-e7ffe938"], ["12 cm", "Multicolour · Blue", 75, "out", "t59-21dbda46"]] },
+  { name: "Lighting", sub: "Signature shapes, brought to light.", cat: "Lighting", shape: "lamp",
+    desc: "The Riccio and Dalia as table lamps — porcelain that glows warmly from within.",
+    items: [["M18", "Riccio Lume", 250, "low", "t58-d3f0ccb0", "riccio"], ["M18", "Dalia Lume", 250, "low", "t56-afd94410", "dalia"], ["M24", "Riccio Lume", 350, "low", "t57-ee91f550", "riccio"], ["M24", "Dalia Lume", 350, "low", "t55-6ba33538", "dalia"]] },
+  { name: "Scent Diffusers", sub: "The scents of Capri.", cat: "Refills", shape: "bottle",
+    desc: "A generous 500 ml diffuser in the signature glass bottle.",
+    items: [["", "500 ml", 75, "out", "t119-89740108"]] },
+  { name: "Refills", sub: "Keep the piece, change the scent.", cat: "Refills", shape: "refill",
+    desc: "Refill your Ricciocaprese diffuser with a new fragrance whenever the season changes.",
+    items: [["", "250 ml", 30, "in", "t72-4e8f7857"], ["", "500 ml", 50, "in", "t74-d053d910"]] },
+  { name: "Decor", sub: "Made to be admired.", cat: "Decor", shape: "decor",
+    desc: "The signature shapes on their own — pure porcelain sculpture for tables, shelves and windowsills.",
+    items: [["M8", "Riccio", 28, "in", "t89-0048deb5", "dome"], ["M8", "Anemone", 28, "low", "t5-2be21504", "anemoneDecor"], ["M8", "Dalia", 32, "low", "t18-014d8251", "daliaDecor"],
+            ["M12", "Riccio", 42, "in", "t95-5da17d62", "dome"], ["M12", "Anemone", 42, "low", "t4-730fe041", "anemoneDecor"], ["M12", "Dalia", 45, "low", "t19-002da9f2", "daliaDecor"],
+            ["M2", "Ramocaprese", 65, "low", "t67-0f056a64", "coral"], ["M18", "Anemone", 110, "low", "t2-91ca49ac", "anemoneDecor"], ["M18", "Dalia", 120, "low", "t18-014d8251", "daliaDecor"],
+            ["22 cm", "Pigna", 125, "low", "t65-6aa81799", "pigna"], ["M3", "Ramocaprese", 160, "low", "t69-09d16584", "coral"], ["M24", "Anemone", 199, "low", "t1-503d5ca9", "anemoneDecor"],
+            ["28 cm", "Pigna", 210, "low", "t63-c65a3aa9", "pigna"], ["M4", "Ramocaprese", 350, "low", "t67-0f056a64", "coral"], ["", "Candeliere Foglia", 350, "low", "t46-d0a84404", "candle"]] }
+];
+
+// Flatten into products
+const PRODUCTS = [];
+GROUPS.forEach(g => g.items.forEach((it, i) => {
+  const [size, variant, price, stock, img, shapeOverride] = it;
+  const isNamedVariant = g.name === "Decor" || g.name === "Lighting";
+  PRODUCTS.push({
+    id: `${g.name}-${i}`.toLowerCase().replace(/\s+/g, "-"),
+    group: g, name: isNamedVariant ? variant : g.name, size, variant, price, stock,
+    img: IMG + img + ".webp", shape: shapeOverride || g.shape,
+    // Lighting keeps its base shape in shapeOverride for the lamp shade
+    lampShade: g.shape === "lamp" ? shapeOverride : null
+  });
+}));
+PRODUCTS.forEach(p => { if (p.lampShade) p.shape = "lamp"; });
+
+const STOCK_LABEL = { in: "In stock", low: "Last pieces", out: "Sold out" };
+const CATS = ["All", "Diffusers", "Decor", "Lighting", "Refills"];
+
+/* =====================================================================
+   CATALOGUE UI
+   ===================================================================== */
+const $ = s => document.querySelector(s);
+let activeCat = "All", query = "";
+const cart = [];
+
+function swatchStrip(seed) {
+  const keys = PALETTE_MAIN.slice((seed * 3) % 6, (seed * 3) % 6 + 6);
+  return keys.map(k => `<i style="background:${COLOURS[k]}"></i>`).join("");
+}
+
+function renderChips() {
+  $("#chips").innerHTML = CATS.map(c => `<button class="chip ${c === activeCat ? "on" : ""}" data-c="${c}">${c}</button>`).join("");
+}
+$("#chips").addEventListener("click", e => {
+  const b = e.target.closest(".chip"); if (!b) return;
+  activeCat = b.dataset.c; renderChips(); renderGrid();
+});
+$("#search").addEventListener("input", e => { query = e.target.value.trim().toLowerCase(); renderGrid(); });
+
+function renderGrid() {
+  let html = "", n = 0;
+  GROUPS.forEach(g => {
+    if (activeCat !== "All" && g.cat !== activeCat) return;
+    const list = PRODUCTS.filter(p => p.group === g &&
+      (!query || (p.name + " " + p.variant + " " + g.name + " " + p.size).toLowerCase().includes(query)));
+    if (!list.length) return;
+    html += `<section class="group"><h3>${g.name}</h3><p class="sub">${g.sub}</p><div class="grid">`;
+    list.forEach((p, i) => {
+      n++;
+      const meta = [p.size && (p.group.name === "Decor" || p.group.name === "Lighting" ? p.size : `${p.size}`), p.group.name === "Decor" || p.group.name === "Lighting" ? "" : p.variant].filter(Boolean).join(" · ");
+      html += `<button class="card" data-id="${p.id}" style="animation-delay:${i * 60}ms">
+        <div class="thumb"><img loading="lazy" src="${p.img}" alt="${p.name} ${p.variant}">
+          <span class="badge3d"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 3 7v10l9 5 9-5V7z"/><path d="M3 7l9 5 9-5M12 12v10"/></svg>3D</span></div>
+        <h4>${p.name}</h4><p class="meta">${meta || "&nbsp;"}</p>
+        <div class="swatches">${swatchStrip(n)}</div>
+        <div class="row"><span class="price">${p.price}<small>JOD</small></span>
+          <span class="stock ${p.stock}">${STOCK_LABEL[p.stock]}</span></div>
+      </button>`;
+    });
+    html += `</div></section>`;
+  });
+  $("#groups").innerHTML = html || `<p class="empty">Nothing matches “${query}”.</p>`;
+}
+$("#groups").addEventListener("click", e => {
+  const c = e.target.closest(".card"); if (c) openViewer(PRODUCTS.find(p => p.id === c.dataset.id));
+});
+
+function toast(msg) {
+  const t = $("#toast"); t.textContent = msg; t.classList.add("show");
+  clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove("show"), 2200);
+}
+$("#cartBtn").addEventListener("click", () => {
+  if (!cart.length) return toast("Your cart is empty");
+  const total = cart.reduce((s, c) => s + c.price, 0);
+  toast(`${cart.length} piece${cart.length > 1 ? "s" : ""} · ${total} JOD`);
+});
+
+/* =====================================================================
+   3D — shared helpers
+   ===================================================================== */
+function makeRenderer(canvas) {
+  const r = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  r.setPixelRatio(Math.min(devicePixelRatio, 2));
+  r.toneMapping = THREE.LinearToneMapping;
+  r.toneMappingExposure = 0.9;
+  r.shadowMap.enabled = true;
+  r.shadowMap.type = THREE.PCFSoftShadowMap;
+  return r;
+}
+function addLights(scene, renderer) {
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  scene.environment = pmrem.fromScene(new RoomEnvironment(renderer), 0.04).texture;
+  const key = new THREE.DirectionalLight(0xffffff, 2.2);
+  key.position.set(3, 6, 4); key.castShadow = true;
+  key.shadow.mapSize.set(1024, 1024); key.shadow.radius = 6;
+  Object.assign(key.shadow.camera, { left: -3, right: 3, top: 3, bottom: -3 });
+  scene.add(key);
+  scene.add(new THREE.HemisphereLight(0xffffff, 0xe7dfd2, 0.6));
+}
+function shadowFloor() {
+  const m = new THREE.Mesh(new THREE.CircleGeometry(4, 48), new THREE.ShadowMaterial({ opacity: 0.16 }));
+  m.rotation.x = -Math.PI / 2; m.receiveShadow = true; return m;
+}
+
+// Porcelain glaze material
+function glaze(hex) {
+  return new THREE.MeshPhysicalMaterial({ color: hex, roughness: 0.22, metalness: 0, clearcoat: 1, clearcoatRoughness: 0.08, sheen: 0.3 });
+}
+const glass = () => new THREE.MeshPhysicalMaterial({ color: 0xffffff, roughness: 0.02, transmission: 1, thickness: 0.4, ior: 1.5, transparent: true, opacity: 1, envMapIntensity: 1.2 });
+const liquidMat = () => new THREE.MeshPhysicalMaterial({ color: 0xf3e3a6, roughness: 0.05, transmission: 0.85, thickness: 0.6, transparent: true, opacity: 0.75 });
+const woodMat = () => new THREE.MeshStandardMaterial({ color: 0xcfae84, roughness: 0.8 });
+
+function fibonacciSphere(n, minY = -1) {
+  const pts = [], g = Math.PI * (3 - Math.sqrt(5));
+  for (let i = 0; i < n; i++) {
+    const y = 1 - (i / (n - 1)) * 2;
+    if (y < minY) continue;
+    const r = Math.sqrt(1 - y * y), t = g * i;
+    pts.push(new THREE.Vector3(Math.cos(t) * r, y, Math.sin(t) * r));
+  }
+  return pts;
+}
+
+// Place instanced geometry along directions on a sphere-ish surface
+function scatter(geo, mat, dirs, radiusFn, lenFn, extra) {
+  const mesh = new THREE.InstancedMesh(geo, mat, dirs.length);
+  const m = new THREE.Matrix4(), q = new THREE.Quaternion(), up = new THREE.Vector3(0, 1, 0), s = new THREE.Vector3(), p = new THREE.Vector3();
+  dirs.forEach((d, i) => {
+    const r = radiusFn(d); const L = lenFn(d, i);
+    q.setFromUnitVectors(up, d);
+    if (extra) extra(q, d, i);
+    p.copy(d).multiplyScalar(r).multiply(extra?.scaleBody || new THREE.Vector3(1, 1, 1));
+    s.set(L.w ?? 1, L.h ?? L, L.w ?? 1);
+    m.compose(p, q, s); mesh.setMatrixAt(i, m);
+  });
+  mesh.castShadow = true; mesh.receiveShadow = true;
+  return mesh;
+}
+
+/* ---------- Toppers (the porcelain part) ---------- */
+// Rounded spike: cone with a ball tip, base at origin pointing +Y
+function spikeGeo(radius = 0.05, height = 0.18) {
+  const pts = [];
+  for (let i = 0; i <= 12; i++) {
+    const t = i / 12;
+    pts.push(new THREE.Vector2(radius * (1 - t) ** 1.25 + 0.006, t * height));
+  }
+  pts.push(new THREE.Vector2(0, height + 0.006));
+  return new THREE.LatheGeometry(pts, 12);
+}
+
+function urchin(mat, { r = 0.5, flat = 0.85, n = 420, spikeR = 0.045, spikeH = 0.14, minY = -0.35, jitter = 0.25, half = false } = {}) {
+  const g = new THREE.Group();
+  const body = new THREE.Mesh(half ? new THREE.SphereGeometry(r, 64, 32, 0, Math.PI * 2, 0, Math.PI / 2) : new THREE.SphereGeometry(r, 64, 48), mat);
+  body.scale.y = flat; body.castShadow = true; g.add(body);
+  const dirs = fibonacciSphere(n, minY);
+  const geo = spikeGeo(spikeR, spikeH);
+  const mesh = new THREE.InstancedMesh(geo, mat, dirs.length);
+  const m = new THREE.Matrix4(), q = new THREE.Quaternion(), up = new THREE.Vector3(0, 1, 0);
+  dirs.forEach((d, i) => {
+    const pos = d.clone().multiplyScalar(r * 0.96); pos.y *= flat;
+    const normal = new THREE.Vector3(d.x, d.y / flat, d.z).normalize();
+    q.setFromUnitVectors(up, normal);
+    const k = 0.75 + Math.abs(Math.sin(i * 12.9898) * 43758.5453 % 1) * jitter;
+    m.compose(pos, q, new THREE.Vector3(1, k, 1)); mesh.setMatrixAt(i, m);
+  });
+  mesh.castShadow = true; g.add(mesh);
+  return g;
+}
+
+function anemoneTop(mat, { n = 140, len = 0.32, base = 0.32 } = {}) {
+  const g = new THREE.Group();
+  const core = new THREE.Mesh(new THREE.SphereGeometry(base, 32, 24), mat);
+  core.scale.y = 0.6; g.add(core);
+  const geo = spikeGeo(0.05, len);
+  const dirs = fibonacciSphere(n * 2, -0.1);
+  const mesh = new THREE.InstancedMesh(geo, mat, dirs.length);
+  const m = new THREE.Matrix4(), q = new THREE.Quaternion(), up = new THREE.Vector3(0, 1, 0);
+  dirs.forEach((d, i) => {
+    // bend tentacles upward/outward
+    const dir = new THREE.Vector3(d.x * 1.1, d.y * 0.8 + 0.45, d.z * 1.1).normalize();
+    q.setFromUnitVectors(up, dir);
+    const k = 0.7 + ((i * 0.618) % 1) * 0.5;
+    m.compose(d.clone().multiplyScalar(base * 0.8).setY(d.y * base * 0.45), q, new THREE.Vector3(1, k, 1));
+    mesh.setMatrixAt(i, m);
+  });
+  mesh.castShadow = true; g.add(mesh);
+  return g;
+}
+
+function petalGeo(w = 0.16, l = 0.34, cup = 0.08) {
+  const geo = new THREE.SphereGeometry(1, 20, 12, 0, Math.PI, 0, Math.PI);
+  geo.scale(w, l / 2, cup); geo.translate(0, l / 2, 0);
+  return geo;
+}
+function daliaTop(mat, { rings = 6, r = 0.42 } = {}) {
+  const g = new THREE.Group();
+  const center = new THREE.Mesh(new THREE.SphereGeometry(r * 0.25, 24, 16), mat); center.position.y = r * 0.55; g.add(center);
+  for (let k = 0; k < rings; k++) {
+    const t = k / (rings - 1);             // 0 = inner, 1 = outer
+    const count = Math.round(8 + t * 14);
+    const geo = petalGeo(0.1 + t * 0.06, 0.16 + t * 0.26, 0.07);
+    const mesh = new THREE.InstancedMesh(geo, mat, count);
+    const m = new THREE.Matrix4(), e = new THREE.Euler();
+    for (let i = 0; i < count; i++) {
+      const a = (i / count) * Math.PI * 2 + k * 0.4;
+      const tilt = 0.25 + t * 1.15;          // inner petals upright, outer petals open
+      e.set(0, -a + Math.PI / 2, 0, "YXZ");
+      const q = new THREE.Quaternion().setFromEuler(e).multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), tilt));
+      const pos = new THREE.Vector3(Math.cos(a) * r * 0.18 * (0.5 + t), r * 0.5 - t * r * 0.45, Math.sin(a) * r * 0.18 * (0.5 + t));
+      m.compose(pos, q, new THREE.Vector3(1, 1, 1)); mesh.setMatrixAt(i, m);
+    }
+    mesh.castShadow = true; g.add(mesh);
+  }
+  return g;
+}
+
+function tulipTop(mat) {
+  const g = new THREE.Group();
+  const geo = petalGeo(0.17, 0.5, 0.12);
+  for (let i = 0; i < 6; i++) {
+    const p = new THREE.Mesh(geo, mat);
+    const a = (i / 6) * Math.PI * 2;
+    p.rotation.set(0, -a, 0, "YXZ"); p.rotateX(i % 2 ? 0.28 : 0.18);
+    p.position.set(Math.cos(a) * 0.05, 0, Math.sin(a) * 0.05);
+    p.castShadow = true; g.add(p);
+  }
+  return g;
+}
+
+function lilyTop(mat) {
+  const g = new THREE.Group();
+  const geo = petalGeo(0.08, 0.36, 0.05);
+  for (let i = 0; i < 6; i++) {
+    const p = new THREE.Mesh(geo, mat);
+    const a = (i / 6) * Math.PI * 2;
+    p.rotation.set(0, -a, 0, "YXZ"); p.rotateX(0.75 + (i % 2) * 0.15);
+    p.castShadow = true; g.add(p);
+  }
+  const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.045, 0.7, 16), mat);
+  stem.position.y = -0.35; g.add(stem);
+  return g;
+}
+
+/* ---------- Bodies ---------- */
+function diffuser(topper, scale, { reeds = 7, topY = 1.05 } = {}) {
+  const g = new THREE.Group();
+  const w = 0.62, h = 0.78;
+  const bottle = new THREE.Mesh(new RoundedBoxGeometry(w, h, w, 6, 0.07), glass());
+  bottle.position.y = h / 2; bottle.castShadow = true; g.add(bottle);
+  const liquid = new THREE.Mesh(new RoundedBoxGeometry(w - 0.08, h * 0.62, w - 0.08, 4, 0.04), liquidMat());
+  liquid.position.y = 0.05 + h * 0.31; g.add(liquid);
+  const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.12, 0.12, 32), glass());
+  neck.position.y = h + 0.05; g.add(neck);
+  const label = new THREE.Mesh(new THREE.PlaneGeometry(0.28, 0.08), new THREE.MeshStandardMaterial({ color: 0xb59a5a, transparent: true, opacity: 0.6 }));
+  label.position.set(0, h * 0.45, w / 2 + 0.002); g.add(label);
+  for (let i = 0; i < reeds; i++) {
+    const a = (i / reeds) * Math.PI * 2, tilt = 0.12 + (i % 3) * 0.06;
+    const reed = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 1.9, 6), woodMat());
+    reed.position.set(Math.cos(a) * 0.05, h + 0.75, Math.sin(a) * 0.05);
+    reed.rotation.set(Math.sin(a) * tilt, 0, -Math.cos(a) * tilt);
+    reed.castShadow = true; g.add(reed);
+  }
+  if (topper) { topper.position.y = h + 0.1 + topY * 0.18; g.add(topper); }
+  g.scale.setScalar(scale);
+  return g;
+}
+
+function stripedPiece(colors) {
+  // Fontelina — 1950s striped porcelain
+  const g = new THREE.Group();
+  const prof = [[0, 0], [0.42, 0], [0.46, 0.05], [0.5, 0.35], [0.56, 0.62], [0.54, 0.66], [0, 0.66]].map(([x, y]) => new THREE.Vector2(x, y));
+  const stripes = 16;
+  for (let i = 0; i < stripes; i++) {
+    const seg = new THREE.Mesh(new THREE.LatheGeometry(prof, 8, (i / stripes) * Math.PI * 2, Math.PI * 2 / stripes), glaze(colors[i % colors.length]));
+    seg.castShadow = true; g.add(seg);
+  }
+  return g;
+}
+
+function pigna(mat) {
+  const g = new THREE.Group();
+  const geo = petalGeo(0.11, 0.18, 0.06);
+  const rows = 14;
+  for (let r = 0; r < rows; r++) {
+    const t = r / (rows - 1), y = t * 1.3;
+    const rad = Math.sin(Math.PI * (0.15 + t * 0.85)) * 0.36 + 0.04;
+    const count = Math.max(5, Math.round(rad * 34));
+    const mesh = new THREE.InstancedMesh(geo, mat, count);
+    const m = new THREE.Matrix4();
+    for (let i = 0; i < count; i++) {
+      const a = (i / count) * Math.PI * 2 + r * 0.35;
+      const q = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, -a + Math.PI / 2, 0, "YXZ")).multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), 1.0 - t * 0.4));
+      m.compose(new THREE.Vector3(Math.cos(a) * rad, y, Math.sin(a) * rad), q, new THREE.Vector3(1, 1, 1));
+      mesh.setMatrixAt(i, m);
+    }
+    mesh.castShadow = true; g.add(mesh);
+  }
+  const core = new THREE.Mesh(new THREE.CapsuleGeometry(0.28, 0.8, 8, 24), mat); core.position.y = 0.65; g.add(core);
+  return g;
+}
+
+function coral(mat, depth = 4) {
+  // Ramocaprese — branching coral
+  const g = new THREE.Group();
+  const branch = (parent, len, rad, d) => {
+    const cyl = new THREE.Mesh(new THREE.CapsuleGeometry(rad, len, 4, 12), mat);
+    cyl.position.y = len / 2; cyl.castShadow = true; parent.add(cyl);
+    if (d <= 0) return;
+    const n = d > 2 ? 3 : 2;
+    for (let i = 0; i < n; i++) {
+      const pivot = new THREE.Group(); pivot.position.y = len * (0.75 + (i % 2) * 0.15);
+      pivot.rotation.set(0.5 + (i % 2) * 0.2, (i / n) * Math.PI * 2 + d, 0, "YXZ");
+      pivot.rotateX(0.55);
+      parent.add(pivot); branch(pivot, len * 0.72, rad * 0.75, d - 1);
+    }
+  };
+  branch(g, 0.5, 0.07, depth);
+  const base = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.26, 0.08, 32), mat); base.position.y = 0.04; g.add(base);
+  return g;
+}
+
+function candle(mat) {
+  const g = new THREE.Group();
+  const base = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.55, 0.1, 48), mat); base.position.y = 0.05; g.add(base);
+  const geo = petalGeo(0.16, 0.6, 0.06);
+  for (let i = 0; i < 9; i++) {
+    const a = (i / 9) * Math.PI * 2;
+    const leaf = new THREE.Mesh(geo, mat);
+    leaf.rotation.set(0, -a + Math.PI / 2, 0, "YXZ"); leaf.rotateX(0.55);
+    leaf.position.set(Math.cos(a) * 0.12, 0.08, Math.sin(a) * 0.12); leaf.castShadow = true; g.add(leaf);
+  }
+  const wax = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.9, 24), new THREE.MeshStandardMaterial({ color: 0xf6f1e4, roughness: 0.6 }));
+  wax.position.y = 0.55; wax.castShadow = true; g.add(wax);
+  const flame = new THREE.Mesh(new THREE.SphereGeometry(0.035, 12, 12), new THREE.MeshBasicMaterial({ color: 0xffc46b }));
+  flame.scale.y = 2.2; flame.position.y = 1.07; g.add(flame);
+  const light = new THREE.PointLight(0xffb45a, 1.2, 2.5); light.position.y = 1.1; g.add(light);
+  g.userData.flame = flame;
+  return g;
+}
+
+function lamp(mat, shade) {
+  const g = new THREE.Group();
+  const stand = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.34, 0.12, 48), glaze("#f3f1ea")); stand.position.y = 0.06; g.add(stand);
+  const top = shade === "dalia" ? daliaTop(mat, { r: 0.75 }) : urchin(mat, { r: 0.62, flat: 0.9, n: 520, spikeH: 0.16, minY: -0.6 });
+  top.position.y = shade === "dalia" ? 0.2 : 0.62; g.add(top);
+  const glow = new THREE.PointLight(0xffd59a, 2.5, 3); glow.position.y = 0.7; g.add(glow);
+  return g;
+}
+
+/* ---------- Product → 3D model ---------- */
+const SIZE_SCALE = { M2: 0.6, M3: 0.75, M4: 0.95, M8: 0.82, M10: 0.9, M12: 0.95, M18: 1.1, M24: 1.25, "12 cm": 0.9, "22 cm": 0.9, "28 cm": 1.1 };
+
+function buildModel(p, colourName) {
+  const hex = COLOURS[colourName] || COLOURS["Blu Capri"];
+  const mat = glaze(hex);
+  const s = SIZE_SCALE[p.size] || 1;
+  switch (p.shape) {
+    case "riccio": return diffuser(urchin(mat, { r: 0.33, flat: 0.9, n: 260, spikeR: 0.038, spikeH: 0.075, minY: -0.45, jitter: 0.15 }), s);
+    case "lady": { const u = urchin(mat, { r: 0.3, flat: 1.45, n: 320, spikeR: 0.032, spikeH: 0.085, minY: -0.4 }); return diffuser(u, s, { topY: 1.9 }); }
+    case "regina": return diffuser(urchin(mat, { r: 0.33, flat: 0.95, n: 220, spikeR: 0.04, spikeH: 0.2, minY: -0.35, jitter: 0.5 }), s + 0.05, { topY: 1.3 });
+    case "dalia": { const d = daliaTop(mat, { r: 0.42 }); d.position.y = -0.05; const w = new THREE.Group(); w.add(d); return diffuser(w, s, { topY: 0 }); }
+    case "anemone": return diffuser(anemoneTop(mat, { n: 90, len: 0.22, base: 0.24 }), s, { topY: 0.4 });
+    case "tulip": return diffuser(tulipTop(mat), 1, { topY: 0, reeds: 5 });
+    case "fiori": {
+      const g = new THREE.Group();
+      const block = new THREE.Mesh(new RoundedBoxGeometry(0.7, 0.45, 0.5, 6, 0.04), glass());
+      block.position.y = 0.225; block.castShadow = true; g.add(block);
+      const n = parseInt(p.size) || 1;
+      const extra = ["Azzurro Capri", "Ciclamino", "Rosa"];
+      for (let i = 0; i < n; i++) {
+        const lily = lilyTop(i === 0 ? mat : glaze(COLOURS[extra[i]]));
+        lily.position.set((i - (n - 1) / 2) * 0.22, 1.05 + (i % 2) * 0.12, 0); lily.scale.setScalar(1 - i * 0.05); g.add(lily);
+      }
+      for (let i = 0; i < 5; i++) {
+        const reed = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 1.6, 6), woodMat());
+        reed.position.set(-0.1 + i * 0.05, 1.1, -0.06); reed.rotation.z = (i - 2) * 0.08; g.add(reed);
+      }
+      return g;
+    }
+    case "dome": { const u = urchin(mat, { r: 0.75, flat: 0.62, n: 900, spikeR: 0.03, spikeH: 0.17, minY: 0.02, jitter: 0.4, half: true }); u.scale.setScalar(s * 0.9); return u; }
+    case "anemoneDecor": { const a = anemoneTop(mat, { n: 160, len: 0.34, base: 0.36 }); a.position.y = 0.15; a.scale.setScalar(s * 1.2); const w = new THREE.Group(); w.add(a); return w; }
+    case "daliaDecor": { const d = daliaTop(mat, { r: 0.7 }); d.scale.setScalar(s); return d; }
+    case "fontelina": {
+      const v = p.variant.toLowerCase();
+      const cols = v.includes("white") ? [hex, "#f3f1ea"] : v.includes("blue") ? [hex, "#1f5ea8"] : [hex];
+      return stripedPiece(cols);
+    }
+    case "pigna": { const pg = pigna(mat); pg.scale.setScalar(s); return pg; }
+    case "coral": return coral(mat, p.size === "M2" ? 3 : 4);
+    case "candle": return candle(mat);
+    case "lamp": { const l = lamp(mat, p.lampShade); l.scale.setScalar(s); return l; }
+    case "bottle": return diffuser(null, 1.15, { reeds: 9 });
+    case "refill": {
+      const g = new THREE.Group();
+      const b = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.3, 0.95, 48), glass()); b.position.y = 0.475; b.castShadow = true; g.add(b);
+      const l = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.27, 0.7, 48), liquidMat()); l.position.y = 0.38; g.add(l);
+      const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.11, 0.22, 32), glaze("#1b2328")); cap.position.y = 1.05; g.add(cap);
+      g.scale.setScalar(p.variant.startsWith("500") ? 1.15 : 0.95); return g;
+    }
+  }
+  return urchin(mat);
+}
+
+// Which products let the customer pick a glaze colour
+const hasGlaze = p => !["bottle", "refill"].includes(p.shape);
+
+/* =====================================================================
+   VIEWER
+   ===================================================================== */
+const stage = $("#stage");
+const vCanvas = document.createElement("canvas"); stage.prepend(vCanvas);
+const vRenderer = makeRenderer(vCanvas);
+const vScene = new THREE.Scene(); addLights(vScene, vRenderer); vScene.add(shadowFloor());
+const vCam = new THREE.PerspectiveCamera(32, 1, 0.05, 50);
+const controls = new OrbitControls(vCam, vCanvas);
+Object.assign(controls, { enableDamping: true, dampingFactor: 0.07, autoRotate: true, autoRotateSpeed: 1.6, enablePan: false, minDistance: 1.2, maxDistance: 9, maxPolarAngle: Math.PI * 0.52 });
+
+let current = null, model = null, colour = "Blu Capri", viewerOpen = false, fitDist = 4, fitTarget = new THREE.Vector3();
+
+function disposeModel() {
+  if (!model) return;
+  vScene.remove(model);
+  model.traverse(o => { o.geometry?.dispose(); [].concat(o.material || []).forEach(m => m.dispose?.()); });
+  model = null;
+}
+function frameModel(animate) {
+  const box = new THREE.Box3().setFromObject(model);
+  const size = box.getSize(new THREE.Vector3()), center = box.getCenter(new THREE.Vector3());
+  fitTarget.copy(center);
+  fitDist = Math.max(size.y, size.x * 1.1) / (2 * Math.tan(THREE.MathUtils.degToRad(vCam.fov / 2))) * 1.45;
+  if (!animate) { controls.target.copy(center); vCam.position.set(center.x + fitDist * 0.55, center.y + fitDist * 0.32, center.z + fitDist * 0.78); }
+  controls.update();
+}
+function showModel(fresh) {
+  disposeModel();
+  model = buildModel(current, colour);
+  // grow-in animation
+  model.scale.multiplyScalar(fresh ? 0.6 : 1); model.userData.targetScale = fresh ? 1 / 0.6 : 1;
+  const gb = new THREE.Box3().setFromObject(model); model.position.y -= gb.min.y;
+  vScene.add(model);
+  if (fresh) { const s = model.scale.x; model.scale.setScalar(s / 0.6); frameModel(false); model.scale.setScalar(s); }
+}
+
+function variantsOf(p) { return PRODUCTS.filter(x => x.group === p.group && (p.group.name === "Decor" || p.group.name === "Lighting" ? x.name === p.name : true)); }
+
+function renderPanel() {
+  const p = current, g = p.group;
+  const vs = variantsOf(p);
+  const sizeLabel = v => [v.size, (g.name === "Decor" || g.name === "Lighting") ? "" : v.variant].filter(Boolean).join(" · ") || v.variant;
+  $("#panel").innerHTML = `
+    <p class="coll">${g.name === p.name ? g.cat : g.name}</p>
+    <h2>${p.name}</h2>
+    <p class="quote">${g.sub}</p>
+    <p class="desc">${g.desc}</p>
+    ${hasGlaze(p) ? `<p class="label">Glaze <em id="cName">${colour}</em></p>
+      <div class="colours">${Object.entries(COLOURS).map(([n, h]) => `<button title="${n}" aria-label="${n}" data-col="${n}" class="${n === colour ? "on" : ""}" style="background:${h}"></button>`).join("")}</div>` : ""}
+    ${vs.length > 1 ? `<p class="label">Size</p><div class="sizes">${vs.map(v => `<button data-v="${v.id}" class="${v === p ? "on" : ""}" ${v.stock === "out" ? "disabled" : ""}>${sizeLabel(v)}</button>`).join("")}</div>` : ""}
+    <div class="buy">
+      <span class="price">${p.price}<small>JOD</small></span>
+      <button class="add" id="add" ${p.stock === "out" ? "disabled" : ""}>${p.stock === "out" ? "Sold out" : "Add to cart"}</button>
+    </div>
+    <p class="note">${p.stock === "low" ? "Only a few pieces left in Amman. " : ""}Delivery is arranged with you on WhatsApp. Prices in Jordanian dinar.</p>`;
+}
+$("#panel").addEventListener("click", e => {
+  const c = e.target.closest("[data-col]");
+  if (c) { colour = c.dataset.col; recolour(); renderPanel(); return; }
+  const v = e.target.closest("[data-v]");
+  if (v && !v.disabled) { current = PRODUCTS.find(x => x.id === v.dataset.v); showModel(true); renderPanel(); return; }
+  if (e.target.id === "add") {
+    cart.push({ ...current, colour: hasGlaze(current) ? colour : null });
+    $("#cartCount").textContent = cart.length;
+    toast(`Added — ${current.name}${hasGlaze(current) ? " · " + colour : ""}`);
+  }
+});
+// Recolour in place (keeps camera + rotation) by swapping glaze materials
+function recolour() {
+  const rot = model.rotation.y;
+  showModel(false); model.rotation.y = rot;
+}
+
+function openViewer(p) {
+  current = p;
+  const v = PRODUCTS.indexOf(p);
+  colour = hasGlaze(p) ? PALETTE_MAIN[v % PALETTE_MAIN.length] : colour;
+  if (!hasGlaze(p) || p.shape === "candle") colour = p.shape === "candle" ? "Verde Ramino" : colour;
+  renderPanel();
+  $("#viewer").classList.add("open"); document.body.style.overflow = "hidden";
+  viewerOpen = true; resizeViewer(); showModel(true);
+  controls.autoRotate = true; $("#tSpin").classList.add("on");
+  history.replaceState(null, "", "#" + p.id);
+}
+function closeViewer() {
+  $("#viewer").classList.remove("open"); document.body.style.overflow = "";
+  viewerOpen = false; history.replaceState(null, "", "#collection");
+  setTimeout(() => { if (!viewerOpen) disposeModel(); }, 400);
+}
+$("#close").addEventListener("click", closeViewer);
+addEventListener("keydown", e => { if (e.key === "Escape" && viewerOpen) closeViewer(); });
+$("#tSpin").addEventListener("click", e => { controls.autoRotate = !controls.autoRotate; e.currentTarget.classList.toggle("on", controls.autoRotate); });
+$("#tReset").addEventListener("click", () => frameModel(false));
+$("#tZoom").addEventListener("click", () => {
+  const dir = vCam.position.clone().sub(controls.target).normalize();
+  const near = fitTarget.clone(); near.y += 0.25 * fitDist / 4;
+  controls.target.copy(near); vCam.position.copy(near).addScaledVector(dir, fitDist * 0.5);
+});
+
+function resizeViewer() {
+  const r = stage.getBoundingClientRect();
+  vRenderer.setSize(r.width, r.height, false);
+  vCam.aspect = r.width / r.height; vCam.updateProjectionMatrix();
+}
+addEventListener("resize", () => { if (viewerOpen) resizeViewer(); resizeHero(); });
+
+/* =====================================================================
+   HERO — a big, draggable porcelain urchin
+   ===================================================================== */
+const hCanvas = $("#heroCanvas");
+const hRenderer = makeRenderer(hCanvas);
+const hScene = new THREE.Scene(); addLights(hScene, hRenderer);
+const hCam = new THREE.PerspectiveCamera(30, 1, 0.1, 50);
+const heroColours = ["Azzurro Capri", "Blu Capri", "Rosso", "Corallo", "Bianco"];
+let heroIdx = 0;
+const heroMat = glaze(COLOURS[heroColours[0]]);
+const heroUrchin = urchin(heroMat, { r: 0.8, flat: 0.7, n: 1100, spikeR: 0.032, spikeH: 0.16, minY: 0.02, jitter: 0.4, half: true });
+hScene.add(heroUrchin);
+const hFloor = shadowFloor(); hScene.add(hFloor);
+let drag = null, spinV = 0.004;
+hCanvas.addEventListener("pointerdown", e => { drag = { x: e.clientX, r: heroUrchin.rotation.y }; hCanvas.setPointerCapture(e.pointerId); });
+hCanvas.addEventListener("pointermove", e => { if (drag) { const dx = (e.clientX - drag.x) / 160; spinV = dx * 0.02; heroUrchin.rotation.y = drag.r + dx; } });
+hCanvas.addEventListener("pointerup", () => { drag = null; });
+const targetCol = new THREE.Color(heroMat.color);
+setInterval(() => { heroIdx = (heroIdx + 1) % heroColours.length; targetCol.set(COLOURS[heroColours[heroIdx]]); }, 3500);
+
+function resizeHero() {
+  const r = hCanvas.getBoundingClientRect();
+  hRenderer.setSize(r.width, r.height, false);
+  hCam.aspect = r.width / r.height; hCam.updateProjectionMatrix();
+  // Urchin sits low, below the wordmark; on narrow screens pull back
+  const wide = r.width / r.height > 1;
+  hCam.position.set(0, 2.4, wide ? 6.2 : 9); hCam.lookAt(0, wide ? 1.15 : 2.0, 0);
+  heroUrchin.userData.baseY = 0;
+  heroUrchin.position.y = heroUrchin.userData.baseY;
+  hFloor.position.y = -0.01;
+}
+resizeHero();
+
+/* =====================================================================
+   LOOP
+   ===================================================================== */
+const clock = new THREE.Clock();
+let heroVisible = true;
+new IntersectionObserver(([e]) => { heroVisible = e.isIntersecting; }).observe(hCanvas);
+vRenderer.setAnimationLoop(() => {
+  const t = clock.getElapsedTime();
+  if (viewerOpen && model) {
+    const ts = model.userData.targetScale;
+    if (ts && ts !== 1) { const k = 1 + (ts - 1) * 0.12; model.scale.multiplyScalar(k); model.userData.targetScale = ts / k; if (Math.abs(model.userData.targetScale - 1) < 0.002) model.userData.targetScale = 1; }
+    model.traverse(o => { if (o.userData.flame) o.userData.flame.scale.y = 2.2 + Math.sin(t * 13) * 0.25; });
+    controls.update(); vRenderer.render(vScene, vCam);
+  }
+  if (heroVisible && !viewerOpen) {
+    if (!drag) { heroUrchin.rotation.y += spinV; spinV += (0.004 - spinV) * 0.02; }
+    heroUrchin.position.y = heroUrchin.userData.baseY + Math.sin(t * 1.2) * 0.04;
+    heroMat.color.lerp(targetCol, 0.03);
+    hRenderer.render(hScene, hCam);
+  }
+});
+
+/* ---------- boot ---------- */
+renderChips(); renderGrid();
+const deep = PRODUCTS.find(p => "#" + p.id === location.hash);
+if (deep) openViewer(deep);
+</script>
+</body>
+</html>
