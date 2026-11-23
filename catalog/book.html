@@ -1,0 +1,1271 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ricciocaprese — Pop-up Catalogue</title>
+<meta name="theme-color" content="#2a1a10">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #2a1a10;
+    --glass: rgba(38, 26, 18, .62);
+    --glass-line: rgba(255, 236, 210, .14);
+    --cream: #f3ead9;
+    --muted: rgba(243, 234, 217, .62);
+    --navy: #17456f;
+    --sky: #a8c8e9;
+    --wa: #25d366;
+    --ar: "IBM Plex Sans Arabic", system-ui, sans-serif;
+    --serif: "Cormorant Garamond", Georgia, serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(--cream); font-family: var(--ar); -webkit-font-smoothing: antialiased; }
+  button, input, textarea { font: inherit; color: inherit; }
+  button { background: none; border: 0; cursor: pointer; }
+  canvas#scene { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+
+  .glass { background: var(--glass); border: 1px solid var(--glass-line); backdrop-filter: blur(16px) saturate(1.2); -webkit-backdrop-filter: blur(16px) saturate(1.2); }
+  .ui { transition: opacity .45s ease; }
+  body.playing .ui:not(.brand) { opacity: 0; pointer-events: none; }
+
+  /* brand (top right in RTL) */
+  .brand { position: fixed; top: 16px; right: 16px; z-index: 5; padding: 10px 18px; border-radius: 14px; text-align: center; }
+  .brand b { display: block; font-weight: 600; font-size: 18px; }
+  .brand span { display: block; font-family: var(--serif); font-weight: 600; font-size: 12px; letter-spacing: .42em; color: var(--sky); direction: ltr; margin-top: 1px; }
+
+  /* tools (top left) */
+  .tools { position: fixed; top: 16px; left: 16px; z-index: 5; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+  .tool-row { display: flex; gap: 6px; padding: 6px; border-radius: 14px; flex-wrap: wrap; justify-content: flex-end; }
+  .tool { display: flex; align-items: center; gap: 6px; padding: 8px 12px; border-radius: 10px; font-size: 13px; color: var(--cream); transition: background .2s; white-space: nowrap; }
+  .tool:hover, .tool.on { background: rgba(255, 236, 210, .14); }
+  .tool svg { flex: none; }
+  .tool[hidden] { display: none; }
+  .hint { font-size: 12px; color: var(--muted); padding: 0 6px; }
+
+  /* arrows */
+  .arrow { position: fixed; top: 50%; z-index: 5; width: 52px; height: 52px; margin-top: -26px; border-radius: 50%; display: grid; place-items: center; transition: transform .2s, opacity .2s; }
+  .arrow:hover { transform: scale(1.08); }
+  .arrow:disabled { opacity: .25; cursor: default; transform: none; }
+  .arrow.next { left: 18px; }
+  .arrow.prev { right: 18px; }
+
+  /* bottom */
+  .bottom { position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%); z-index: 5; width: min(860px, calc(100% - 32px)); display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .dots { display: flex; gap: 4px; align-items: center; padding: 5px; border-radius: 999px; }
+  .dots button { font-family: var(--serif); font-weight: 600; font-size: 14px; width: 36px; height: 28px; border-radius: 999px; color: var(--muted); direction: ltr; transition: all .2s; }
+  .dots button.on { background: var(--cream); color: #2a1a10; }
+  .note { font-size: 11px; color: var(--muted); }
+  .panel { width: 100%; border-radius: 20px; padding: 14px 18px; display: grid; grid-template-columns: auto 1fr auto auto auto; gap: 18px; align-items: center; }
+  .count, .dots button, .price b { font-variant-numeric: lining-nums; }
+  .count { font-family: var(--serif); font-weight: 600; font-size: 22px; direction: ltr; color: var(--sky); }
+  .names b { display: block; font-size: 20px; font-weight: 600; line-height: 1.2; }
+  .names span { display: block; font-family: var(--serif); font-weight: 600; letter-spacing: .28em; font-size: 12px; color: var(--muted); direction: ltr; text-align: right; }
+  .finishes { display: flex; gap: 6px; }
+  .finish { display: flex; align-items: center; gap: 8px; padding: 6px 10px 6px 12px; border-radius: 999px; border: 1px solid transparent; font-size: 12.5px; transition: all .2s; }
+  .finish i { width: 22px; height: 22px; border-radius: 50%; box-shadow: 0 0 0 1px rgba(255,255,255,.25); flex: none; }
+  .finish.on { border-color: var(--cream); background: rgba(255, 236, 210, .1); }
+  .finish:hover { background: rgba(255, 236, 210, .08); }
+  .price { text-align: center; line-height: 1; white-space: nowrap; }
+  .price b { font-family: var(--serif); font-weight: 600; font-size: 34px; }
+  .price small { font-size: 13px; color: var(--muted); margin-right: 4px; }
+  .wa { display: flex; align-items: center; gap: 8px; padding: 12px 16px; border-radius: 14px; background: var(--wa); color: #fff; font-weight: 600; font-size: 14px; text-decoration: none; white-space: nowrap; transition: filter .2s; }
+  .wa:hover { filter: brightness(1.08); }
+
+  /* toast + loader */
+  .toast { position: fixed; top: 84px; left: 50%; transform: translate(-50%, -20px); opacity: 0; z-index: 20; padding: 10px 18px; border-radius: 999px; font-size: 13px; transition: all .35s; pointer-events: none; }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+  .loader { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; background: var(--bg); transition: opacity .8s; text-align: center; }
+  .loader.gone { opacity: 0; pointer-events: none; }
+  .loader b { display: block; font-size: 28px; font-weight: 600; }
+  .loader span { display: block; font-family: var(--serif); letter-spacing: .5em; color: var(--sky); margin-top: 6px; direction: ltr; }
+  .loader i { display: block; width: 120px; height: 2px; margin: 22px auto 0; background: rgba(255,255,255,.12); position: relative; overflow: hidden; }
+  .loader i::after { content: ""; position: absolute; inset: 0; width: 40%; background: var(--sky); animation: load 1.2s ease-in-out infinite; }
+  @keyframes load { from { transform: translateX(-100%); } to { transform: translateX(260%); } }
+
+  /* owner drawer (left on desktop) */
+  .drawer { position: fixed; top: 0; bottom: 0; left: 0; z-index: 30; width: 380px; max-width: 100%; padding: 18px; overflow-y: auto; border-radius: 0 20px 20px 0; transform: translateX(-105%); transition: transform .4s ease; direction: rtl; }
+  .drawer.open { transform: none; }
+  .drawer h3 { font-size: 18px; font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
+  .tabs { display: flex; gap: 4px; margin: 14px 0; }
+  .tabs button { flex: 1; padding: 8px 0; border-radius: 8px; font-family: var(--serif); font-weight: 600; direction: ltr; color: var(--muted); }
+  .tabs button.on { background: var(--cream); color: #2a1a10; }
+  .field { display: block; margin-top: 10px; font-size: 12px; color: var(--muted); }
+  .field input, .field textarea { display: block; width: 100%; margin-top: 4px; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--glass-line); background: rgba(0,0,0,.25); color: var(--cream); font-size: 14px; }
+  .field textarea { min-height: 88px; resize: vertical; line-height: 1.6; }
+  .field input:focus, .field textarea:focus { outline: none; border-color: var(--sky); }
+  .field.ltr input { direction: ltr; text-align: left; }
+  .fgroup { margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--glass-line); }
+  .fgroup > p { font-size: 13px; font-weight: 600; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 80px; gap: 6px; }
+  .actions { display: flex; gap: 8px; margin-top: 18px; position: sticky; bottom: 0; padding: 10px 0 0; }
+  .btn { flex: 1; padding: 11px; border-radius: 10px; background: var(--cream); color: #2a1a10; font-weight: 600; font-size: 14px; }
+  .btn.ghost { background: rgba(255,255,255,.08); color: var(--cream); }
+  .btn.warn { background: #9a3b2a; color: #fff; }
+  .saved { font-size: 12px; color: var(--muted); margin-top: 8px; min-height: 16px; }
+
+  @media (max-width: 760px) {
+    .tool .lbl { display: none; }
+    .tool { padding: 8px 9px; }
+    .hint { display: none; }
+    .brand { padding: 8px 12px; }
+    .brand b { font-size: 15px; }
+    .arrow { width: 42px; height: 42px; top: 38%; margin-top: 0; }
+    .bottom { bottom: 10px; width: calc(100% - 20px); gap: 6px; }
+    .panel { grid-template-columns: 1fr auto; gap: 10px 12px; padding: 12px 14px; }
+    .count { display: none; }
+    .names b { font-size: 17px; }
+    .finishes { grid-column: 1 / -1; order: 3; justify-content: center; }
+    .finish span { display: none; }
+    .finish.on span { display: inline; }
+    .wa { grid-column: 1 / -1; order: 4; justify-content: center; }
+    .dots button { width: 30px; }
+    .drawer { top: auto; height: 78vh; width: 100%; border-radius: 20px 20px 0 0; transform: translateY(105%); }
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition-duration: .01ms !important; animation: none !important; } }
+</style>
+</head>
+<body>
+<canvas id="scene" aria-label="كتالوج ثلاثي الأبعاد"></canvas>
+
+<div class="loader" id="loader"><div><b>ريتشوكابريزي</b><span>RICCIOCAPRESE</span><i></i></div></div>
+
+<header class="brand glass ui"><b>ريتشوكابريزي</b><span>RICCIOCAPRESE</span></header>
+
+<div class="tools ui">
+  <div class="tool-row glass">
+    <button class="tool" id="tPlay"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15l12-7.5z"/></svg><span class="lbl">تشغيل تلقائي</span></button>
+    <button class="tool" id="tSpin"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 12a8 8 0 1 1-3-6.2"/><path d="M20 4v5h-5"/></svg><span class="lbl">تدوير 360°</span></button>
+    <button class="tool" id="tZoom"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M21 21l-5-5M11 8v6M8 11h6"/></svg><span class="lbl">قرّب القطعة</span></button>
+    <button class="tool" id="tHome"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg><span class="lbl">الوضع الأصلي</span></button>
+    <button class="tool" id="tAdmin" hidden><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg><span class="lbl">لوحة التحكم</span></button>
+  </div>
+  <p class="hint">اسحب للتدوير · انقر على العيّنات المطبوعة · انقر طرف الصفحة لقلبها</p>
+</div>
+
+<button class="arrow next glass ui" id="next" aria-label="التالي"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M15 5l-7 7 7 7"/></svg></button>
+<button class="arrow prev glass ui" id="prev" aria-label="السابق"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 5l7 7-7 7"/></svg></button>
+
+<div class="bottom ui">
+  <div class="dots glass" id="dots"></div>
+  <p class="note">المجسّمات توضيحية · كل قطعة مصنوعة يدوياً في كابري وقد تختلف قليلاً</p>
+  <div class="panel glass" id="panel">
+    <span class="count" id="count">01 / 05</span>
+    <div class="names"><b id="nameAr"></b><span id="nameEn"></span></div>
+    <div class="finishes" id="finishes"></div>
+    <div class="price"><b id="price"></b><small>د.أ</small></div>
+    <a class="wa" id="wa" target="_blank" rel="noopener">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.47 14.38c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.17-.17.2-.35.22-.65.07-.3-.15-1.26-.46-2.4-1.48-.89-.79-1.49-1.77-1.66-2.07-.17-.3-.02-.46.13-.61.13-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.03-.52-.07-.15-.67-1.61-.92-2.21-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.79.37-.27.3-1.04 1.02-1.04 2.48s1.07 2.88 1.21 3.08c.15.2 2.1 3.2 5.08 4.49.71.31 1.26.49 1.69.63.71.23 1.36.2 1.87.12.57-.08 1.76-.72 2-1.41.25-.7.25-1.29.17-1.41-.07-.13-.27-.2-.57-.35zM12.05 21.8h-.01a9.8 9.8 0 0 1-5-1.37l-.36-.21-3.72.98 1-3.63-.24-.37a9.82 9.82 0 0 1 15.27-12.12A9.75 9.75 0 0 1 21.86 12c0 5.42-4.41 9.82-9.81 9.82zm8.35-18.16A11.76 11.76 0 0 0 12.05.18C5.54.18.25 5.47.24 11.98c0 2.08.54 4.11 1.58 5.9L.15 24l6.25-1.64a11.8 11.8 0 0 0 5.64 1.44h.01c6.5 0 11.8-5.3 11.8-11.81 0-3.15-1.23-6.12-3.45-8.35z"/></svg>
+      <span>اطلب عبر واتساب</span>
+    </a>
+  </div>
+</div>
+
+<aside class="drawer glass" id="drawer" aria-label="لوحة التحكم">
+  <h3>لوحة التحكم <button class="tool" id="dClose" aria-label="إغلاق">✕</button></h3>
+  <div class="tabs" id="dTabs"></div>
+  <div id="dForm"></div>
+  <div class="fgroup">
+    <label class="field ltr">رقم واتساب المحل (بدون + مثل 9627XXXXXXXX)<input id="dWa" maxlength="16" inputmode="numeric"></label>
+  </div>
+  <div class="actions">
+    <button class="btn" id="dSave">حفظ</button>
+    <button class="btn ghost" id="dReset">استرجاع الافتراضي</button>
+  </div>
+  <p class="saved" id="dSaved"></p>
+</aside>
+
+<div class="toast glass" id="toast"></div>
+
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+} }
+</script>
+<script type="module">
+import * as THREE from "three";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
+import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
+
+/* =========================================================================
+   1. SHOP DATA  (defaults — the owner panel edits a copy of this)
+   ========================================================================= */
+const GLAZE = {
+  "Azzurro Capri": "#3fa7dc", "Rosso": "#cf2a2e", "Bianco": "#f2efe6", "Blu Notte": "#1f2d4f",
+  "Corallo": "#ee7560", "Grigio Perla": "#c9c8c1", "Lilla": "#b49dd2", "Ciclamino": "#c43579",
+  "Giallo": "#f0c133", "Acquamarina": "#5fb9b3", "Blu Capri": "#1f5ea8", "Verde Ramino": "#1f5e4a",
+  "Bordeaux": "#6e1b2c", "Nero": "#1d1d1d"
+};
+const LIQUID = "#efdc9c";
+
+const DEFAULTS = {
+  whatsapp: "",
+  products: [
+    { shape: "riccio", ar: "ريتشو", en: "RICCIO", title: "RICCIO", subtitle: "THE SEA URCHIN · M12",
+      desc: "القطعة التي بدأت الحكاية. قنفذ بحر من البورسلان، مزجّج يدوياً في كابري، يتوّج زجاجة معطّر برائحتك المفضّلة.",
+      dims: "", delivery: "يتم ترتيب التوصيل معك عند تأكيد الطلب", extraLabel: "السعة", extraValue: "200 مل · أعواد قصب طبيعي",
+      finishes: [{ g: "Azzurro Capri", ar: "أزرق كابري", en: "AZZURRO CAPRI", price: 100 }, { g: "Rosso", ar: "أحمر", en: "ROSSO", price: 100 }, { g: "Bianco", ar: "أبيض", en: "BIANCO", price: 100 }] },
+    { shape: "lady", ar: "ليدي كابري", en: "LADY CAPRI", title: "LADY CAPRI", subtitle: "AN ICON, REDRAWN · M10",
+      desc: "الريتشو بقامة أطول وأكثر رشاقة. قطعة هادئة تضيف لمسة احتفال لأي رف أو طاولة.",
+      dims: "", delivery: "يتم ترتيب التوصيل معك عند تأكيد الطلب", extraLabel: "السعة", extraValue: "200 مل · أعواد قصب طبيعي",
+      finishes: [{ g: "Blu Notte", ar: "كحلي", en: "BLU NOTTE", price: 115 }, { g: "Corallo", ar: "مرجاني", en: "CORALLO", price: 115 }, { g: "Grigio Perla", ar: "رمادي لؤلؤي", en: "GRIGIO PERLA", price: 115 }] },
+    { shape: "dalia", ar: "داليا", en: "DALIA", title: "DALIA", subtitle: "PETALS IN BLOOM · M12",
+      desc: "طبقة فوق طبقة من البتلات المشكّلة باليد، تتفتّح مثل زهرة الداليا تحت شمس كابري.",
+      dims: "", delivery: "يتم ترتيب التوصيل معك عند تأكيد الطلب", extraLabel: "السعة", extraValue: "200 مل · أعواد قصب طبيعي",
+      finishes: [{ g: "Lilla", ar: "ليلكي", en: "LILLA", price: 100 }, { g: "Ciclamino", ar: "فوشي", en: "CICLAMINO", price: 100 }, { g: "Giallo", ar: "أصفر", en: "GIALLO", price: 100 }] },
+    { shape: "anemone", ar: "أنيموني", en: "ANEMONE", title: "ANEMONE", subtitle: "BORN FROM THE SEA · M12",
+      desc: "مجسّات ناعمة متجمّعة على شكل شقائق النعمان البحرية. قطعة من شعاب كابري في بيتك.",
+      dims: "", delivery: "يتم ترتيب التوصيل معك عند تأكيد الطلب", extraLabel: "السعة", extraValue: "200 مل · أعواد قصب طبيعي",
+      finishes: [{ g: "Acquamarina", ar: "أكوامارين", en: "ACQUAMARINA", price: 100 }, { g: "Blu Capri", ar: "أزرق كابري", en: "BLU CAPRI", price: 100 }, { g: "Bianco", ar: "أبيض", en: "BIANCO", price: 100 }] },
+    { shape: "regina", ar: "ريجينا", en: "REGINA", title: "REGINA", subtitle: "THE RICCIO, EVOLVED · 300 ML",
+      desc: "قنفذ بحر متوّج بأشواك أطول وأجرأ. ملكة المجموعة، وحضورها لا يُخطئه أحد.",
+      dims: "", delivery: "يتم ترتيب التوصيل معك عند تأكيد الطلب", extraLabel: "السعة", extraValue: "300 مل · أعواد قصب طبيعي",
+      finishes: [{ g: "Verde Ramino", ar: "أخضر نحاسي", en: "VERDE RAMINO", price: 140 }, { g: "Bordeaux", ar: "عنابي", en: "BORDEAUX", price: 140 }, { g: "Nero", ar: "أسود", en: "NERO", price: 140 }] }
+  ]
+};
+const N = DEFAULTS.products.length;
+const clone = o => JSON.parse(JSON.stringify(o));
+let DATA = clone(DEFAULTS);
+const finishSel = new Array(N).fill(0);
+
+// Clean anything loaded from storage: strings only, trimmed, length-capped; prices numeric.
+const LIMITS = { ar: 40, en: 40, title: 24, subtitle: 48, desc: 360, dims: 60, delivery: 80, extraLabel: 30, extraValue: 60 };
+function sanitize(raw) {
+  const out = clone(DEFAULTS);
+  if (!raw || typeof raw !== "object") return out;
+  const str = (v, max, fb) => (typeof v === "string" ? v.replace(/[\u0000-\u001f<>]/g, " ").trim().slice(0, max) : fb);
+  if (typeof raw.whatsapp === "string") out.whatsapp = raw.whatsapp.replace(/\D/g, "").slice(0, 16);
+  if (Array.isArray(raw.products)) raw.products.slice(0, N).forEach((p, i) => {
+    if (!p || typeof p !== "object") return;
+    const d = out.products[i];
+    for (const k in LIMITS) d[k] = str(p[k], LIMITS[k], d[k]);
+    if (Array.isArray(p.finishes)) p.finishes.slice(0, 3).forEach((f, j) => {
+      if (!f || typeof f !== "object") return;
+      d.finishes[j].ar = str(f.ar, 30, d.finishes[j].ar);
+      d.finishes[j].en = str(f.en, 30, d.finishes[j].en);
+      const pr = Number(f.price);
+      if (Number.isFinite(pr)) d.finishes[j].price = Math.max(0, Math.min(99999, Math.round(pr)));
+    });
+  });
+  return out;
+}
+const pad2 = n => String(n + 1).padStart(2, "0");
+
+/* =========================================================================
+   2. RENDERER / SCENE
+   ========================================================================= */
+const isMobile = () => innerWidth < 760;
+const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const canvas = document.getElementById("scene");
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.0;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFShadowMap;
+const MAX_ANISO = renderer.capabilities.getMaxAnisotropy();
+
+const scene = new THREE.Scene();
+const BG = new THREE.Color("#2a1a10");
+scene.background = BG;
+scene.fog = new THREE.Fog(BG, 7, 17);
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+scene.environmentIntensity = 0.35;
+
+const camera = new THREE.PerspectiveCamera(30, 1, 0.05, 60);
+const controls = new OrbitControls(camera, canvas);
+Object.assign(controls, { enableDamping: true, dampingFactor: 0.08, enablePan: false, minPolarAngle: 0.12, maxPolarAngle: 1.12, rotateSpeed: 0.7 });
+
+// Sun from upper-left, behind; shines through an invisible window frame.
+const sunDir = new THREE.Vector3(-0.55, 0.78, -0.42).normalize();
+const sun = new THREE.DirectionalLight(0xffd29a, 3.1);
+sun.position.copy(sunDir).multiplyScalar(9);
+sun.castShadow = true;
+const SHADOW_RES = isMobile() ? 2048 : 4096;
+sun.shadow.mapSize.set(SHADOW_RES, SHADOW_RES);
+sun.shadow.radius = 5;
+sun.shadow.bias = -0.0004;
+sun.shadow.normalBias = 0.01;
+Object.assign(sun.shadow.camera, { left: -3.2, right: 3.2, top: 3.2, bottom: -3.2, near: 0.5, far: 20 });
+scene.add(sun, sun.target);
+scene.add(new THREE.HemisphereLight(0xffe6c4, 0x3a2414, 0.55));
+const fill = new THREE.DirectionalLight(0xbfd4ff, 0.25); fill.position.set(3, 4, 4); scene.add(fill);
+
+(function windowFrame() {
+  const s = new THREE.Shape();
+  s.moveTo(-10, -10); s.lineTo(10, -10); s.lineTo(10, 10); s.lineTo(-10, 10); s.lineTo(-10, -10);
+  const paneW = 1.05, paneH = 3.4, gap = 0.16;
+  for (let k = -1; k <= 1; k++) {
+    const x0 = k * (paneW + gap) - paneW / 2, y0 = -paneH / 2;
+    const h = new THREE.Path();
+    h.moveTo(x0, y0); h.lineTo(x0, y0 + paneH); h.lineTo(x0 + paneW, y0 + paneH); h.lineTo(x0 + paneW, y0); h.lineTo(x0, y0);
+    s.holes.push(h);
+  }
+  const frame = new THREE.Mesh(new THREE.ShapeGeometry(s), new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false, side: THREE.DoubleSide }));
+  frame.castShadow = true;
+  frame.position.copy(sunDir).multiplyScalar(4.2).add(new THREE.Vector3(0.35, 0, 0.25));
+  frame.lookAt(frame.position.clone().add(sunDir));
+  frame.rotateZ(0.32);           // slanted bars of light
+  frame.renderOrder = -1;
+  scene.add(frame);
+})();
+
+/* ---------- procedural canvas textures ---------- */
+function makeCanvas(w, h) { const c = document.createElement("canvas"); c.width = w; c.height = h; return c; }
+function rand(seed) { let s = seed >>> 0; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }
+function tex(c, { repeat, srgb = true } = {}) {
+  const t = new THREE.CanvasTexture(c);
+  if (srgb) t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = MAX_ANISO;
+  if (repeat) { t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(...repeat); }
+  return t;
+}
+
+function walnutTexture() {
+  const W = 2048, H = 2048, c = makeCanvas(W, H), x = c.getContext("2d"), r = rand(7);
+  const planks = 8, ph = H / planks;
+  for (let p = 0; p < planks; p++) {
+    const base = 28 + r() * 10, y0 = p * ph;
+    x.fillStyle = `hsl(${22 + r() * 6}, ${38 + r() * 8}%, ${base * 0.55}%)`;
+    x.fillRect(0, y0, W, ph);
+    // grain: long wavy lines across the plank (planks run across the screen)
+    for (let g = 0; g < 140; g++) {
+      const yy = y0 + r() * ph, amp = 2 + r() * 10, f = 0.002 + r() * 0.004, ph0 = r() * 10;
+      x.strokeStyle = `rgba(${r() < 0.5 ? "20,10,4" : "120,72,40"},${0.08 + r() * 0.16})`;
+      x.lineWidth = 0.6 + r() * 2.2;
+      x.beginPath();
+      for (let xx = 0; xx <= W; xx += 16) x.lineTo(xx, yy + Math.sin(xx * f + ph0) * amp + Math.sin(xx * f * 3.1) * amp * 0.3);
+      x.stroke();
+    }
+    // knots
+    for (let k = 0; k < 2; k++) {
+      const kx = r() * W, ky = y0 + ph * (0.3 + r() * 0.4);
+      for (let q = 7; q > 0; q--) { x.strokeStyle = `rgba(25,12,5,${0.08 * q / 3})`; x.lineWidth = 1.5; x.beginPath(); x.ellipse(kx, ky, q * 7, q * 3, 0, 0, Math.PI * 2); x.stroke(); }
+    }
+    x.fillStyle = "rgba(10,5,2,.85)"; x.fillRect(0, y0, W, 3);   // plank seam
+  }
+  return tex(c, { repeat: [3, 3] });
+}
+function linenTexture(color) {
+  const c = makeCanvas(256, 256), x = c.getContext("2d"), r = rand(3);
+  x.fillStyle = color; x.fillRect(0, 0, 256, 256);
+  for (let i = 0; i < 256; i += 2) {
+    x.fillStyle = `rgba(255,255,255,${r() * 0.05})`; x.fillRect(0, i, 256, 1);
+    x.fillStyle = `rgba(0,0,0,${r() * 0.08})`; x.fillRect(i, 0, 1, 256);
+  }
+  return tex(c, { repeat: [6, 6] });
+}
+function stripeTexture(vertical) {
+  const c = makeCanvas(64, 64), x = c.getContext("2d");
+  x.fillStyle = "#e9dfcb"; x.fillRect(0, 0, 64, 64);
+  x.fillStyle = "rgba(120,96,64,.35)";
+  if (vertical) x.fillRect(0, 0, 14, 64); else x.fillRect(0, 0, 64, 14);
+  return tex(c);
+}
+const paperGrain = (() => {
+  const c = makeCanvas(256, 256), x = c.getContext("2d"), r = rand(11), d = x.createImageData(256, 256);
+  for (let i = 0; i < d.data.length; i += 4) { const v = 128 + (r() - 0.5) * 60; d.data[i] = d.data[i + 1] = d.data[i + 2] = v; d.data[i + 3] = 22; }
+  x.putImageData(d, 0, 0);
+  return c;
+})();
+function softShadowTexture() {
+  const c = makeCanvas(128, 128), x = c.getContext("2d"), g = x.createRadialGradient(64, 64, 4, 64, 64, 62);
+  g.addColorStop(0, "rgba(40,24,10,.55)"); g.addColorStop(1, "rgba(40,24,10,0)");
+  x.fillStyle = g; x.fillRect(0, 0, 128, 128);
+  return tex(c);
+}
+
+/* ---------- table ---------- */
+const table = new THREE.Mesh(new THREE.PlaneGeometry(30, 30),
+  new THREE.MeshPhysicalMaterial({ map: walnutTexture(), roughness: 0.42, clearcoat: 0.55, clearcoatRoughness: 0.22, color: 0xb08a6a }));
+table.rotation.x = -Math.PI / 2; table.position.y = -0.03; table.receiveShadow = true;
+scene.add(table);
+
+/* =========================================================================
+   3. THE BOOK
+   ========================================================================= */
+const PW = 1.0, PH = 1.34, T = 0.065;
+// One surface function used everywhere: u = distance from the spine (0..1).
+function pageH(u) {
+  u = Math.max(0, Math.min(1, u));
+  return T - 0.05 * Math.exp(-u * 13) + 0.012 * Math.exp(-(((u - 0.14) / 0.07) ** 2));
+}
+const book = new THREE.Group();
+book.rotation.y = -0.1;
+scene.add(book);
+
+// cover boards + spine
+const coverMat = new THREE.MeshStandardMaterial({ map: linenTexture("#1b2f45"), roughness: 0.85 });
+const cover = new THREE.Mesh(new RoundedBoxGeometry(2 * PW + 0.08, 0.026, PH + 0.08, 3, 0.01), coverMat);
+cover.position.y = -0.013; cover.receiveShadow = true; cover.castShadow = true; book.add(cover);
+const spine = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, PH + 0.08, 24, 1, false, Math.PI / 2, Math.PI), coverMat);
+spine.rotation.x = Math.PI / 2; spine.position.y = -0.02; book.add(spine);
+
+// page block stacks (profile follows pageH, extruded along the page height)
+function stack(side) {
+  const s = new THREE.Shape(), steps = 40;
+  s.moveTo(0, 0.002);
+  for (let i = 0; i <= steps; i++) { const u = i / steps; s.lineTo(side * u * PW, pageH(u) - 0.003); }
+  s.lineTo(side * PW, 0.002); s.lineTo(0, 0.002);
+  const g = new THREE.ExtrudeGeometry(s, { depth: PH, bevelEnabled: false, curveSegments: 1 });
+  g.translate(0, 0, -PH / 2);
+  const capTex = stripeTexture(false); capTex.wrapS = capTex.wrapT = THREE.RepeatWrapping; capTex.repeat.set(1, 260);
+  const sideTex = stripeTexture(true); sideTex.wrapS = sideTex.wrapT = THREE.RepeatWrapping; sideTex.repeat.set(260, 1);
+  const m = new THREE.Mesh(g, [new THREE.MeshStandardMaterial({ map: capTex, roughness: 0.95 }), new THREE.MeshStandardMaterial({ map: sideTex, roughness: 0.95 })]);
+  m.castShadow = true; m.receiveShadow = true;
+  return m;
+}
+book.add(stack(-1), stack(1));
+
+// static page surfaces
+function pageGeo(side) {
+  const g = new THREE.PlaneGeometry(PW, PH, 64, 4);
+  g.rotateX(-Math.PI / 2);
+  const p = g.attributes.position;
+  for (let i = 0; i < p.count; i++) {
+    const x = p.getX(i);
+    const u = side < 0 ? 0.5 - x : x + 0.5;     // left: canvas left = outer edge; right: canvas left = spine
+    p.setX(i, side * u * PW); p.setY(i, pageH(u) + 0.0015);
+  }
+  g.computeVertexNormals();
+  return g;
+}
+const leftPage = new THREE.Mesh(pageGeo(-1), new THREE.MeshStandardMaterial({ roughness: 0.92 }));
+const rightPage = new THREE.Mesh(pageGeo(1), new THREE.MeshStandardMaterial({ roughness: 0.92 }));
+leftPage.receiveShadow = rightPage.receiveShadow = true;
+book.add(leftPage, rightPage);
+
+// the turning sheet: two meshes sharing positions; back face has mirrored UVs
+const SX = 64, SY = 8;
+const sheetPos = new THREE.BufferAttribute(new Float32Array((SX + 1) * (SY + 1) * 3), 3);
+const uvF = [], uvB = [], idx = [];
+for (let j = 0; j <= SY; j++) for (let i = 0; i <= SX; i++) { uvF.push(1 - i / SX, 1 - j / SY); uvB.push(i / SX, 1 - j / SY); }
+for (let j = 0; j < SY; j++) for (let i = 0; i < SX; i++) {
+  const a = j * (SX + 1) + i, b = a + 1, c = a + SX + 1, d = c + 1;
+  idx.push(a, b, c, b, d, c);
+}
+function sheetGeo(uv) {
+  const g = new THREE.BufferGeometry();
+  g.setAttribute("position", sheetPos); g.setAttribute("uv", new THREE.Float32BufferAttribute(uv, 2)); g.setIndex(idx);
+  return g;
+}
+const sheetFront = new THREE.Mesh(sheetGeo(uvF), new THREE.MeshStandardMaterial({ roughness: 0.92, side: THREE.FrontSide }));
+const sheetBack = new THREE.Mesh(sheetGeo(uvB), new THREE.MeshStandardMaterial({ roughness: 0.92, side: THREE.BackSide }));
+for (const m of [sheetFront, sheetBack]) { m.castShadow = true; m.receiveShadow = true; m.visible = false; m.frustumCulled = false; book.add(m); }
+
+const smooth = (a, b, x) => { const t = Math.max(0, Math.min(1, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+const easeInOutCubic = t => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
+const easeOutBack = t => { const c1 = 1.5, c3 = c1 + 1; return 1 + c3 * (t - 1) ** 3 + c1 * (t - 1) ** 2; };
+
+// Shape the sheet around the spine. alpha0 = 0 → lying on the left, π → lying on the right.
+const SP_S = 0.5;              // where the piece stands, as a fraction of page width
+const sheetAnchor = { pos: new THREE.Vector3(), angle: 0 };
+function shapeSheet(alpha0, t, dir) {
+  const K = 1.15 * Math.sin(Math.PI * t);
+  const ds = PW / SX;
+  const land = smooth(0, 0.35, Math.min(alpha0, Math.PI - alpha0));
+  for (let j = 0; j <= SY; j++) {
+    const Kj = K * (0.9 + 0.2 * (j / SY)) * (1 + 0.06 * Math.sin(j * 1.3));
+    let x = 0, y = 0;
+    const z = -PH / 2 + (j / SY) * PH;
+    for (let i = 0; i <= SX; i++) {
+      const s = i * ds;
+      if (i > 0) {
+        const sm = s - ds / 2;
+        const a = Math.max(0, Math.min(Math.PI, alpha0 - dir * Kj * sm / PW));
+        x += -Math.cos(a) * ds; y += Math.sin(a) * ds;
+        if (j === SY / 2 && Math.abs(sm - SP_S) < ds / 2 + 1e-6) sheetAnchor.angle = a;
+      }
+      const base = THREE.MathUtils.lerp(pageH(s / PW), pageH(0.3), land) + 0.003;
+      sheetPos.setXYZ(j * (SX + 1) + i, x, y + base, z);
+      if (j === SY / 2 && Math.abs(s - SP_S) < 1e-6) sheetAnchor.pos.set(x, y + base, z + 0.02);
+    }
+  }
+  sheetPos.needsUpdate = true;
+  sheetFront.geometry.computeVertexNormals();
+  if (sheetBack.geometry.attributes.normal !== sheetFront.geometry.attributes.normal) sheetBack.geometry.setAttribute("normal", sheetFront.geometry.attributes.normal);
+  sheetFront.geometry.computeBoundingSphere();
+}
+
+/* =========================================================================
+   4. PORCELAIN PIECES (built in code; 1 unit ≈ 13 cm in real life)
+   ========================================================================= */
+const MM_PER_UNIT = 130;
+function glazeMat(hex) { return new THREE.MeshPhysicalMaterial({ color: hex, roughness: 0.2, clearcoat: 1, clearcoatRoughness: 0.06, sheen: 0.25, sheenColor: 0xffffff }); }
+const glassMat = () => new THREE.MeshPhysicalMaterial({ color: 0xffffff, roughness: 0.03, transmission: 1, thickness: 0.35, ior: 1.5, transparent: true });
+const liquidMat = () => new THREE.MeshPhysicalMaterial({ color: LIQUID, roughness: 0.05, transmission: 0.8, thickness: 0.6, transparent: true, opacity: 0.85 });
+const reedMat = () => new THREE.MeshStandardMaterial({ color: 0xcfae84, roughness: 0.8 });
+
+function fib(n, minY) {
+  const pts = [], g = Math.PI * (3 - Math.sqrt(5));
+  for (let i = 0; i < n; i++) { const y = 1 - (i / (n - 1)) * 2; if (y < minY) continue; const r = Math.sqrt(1 - y * y), t = g * i; pts.push(new THREE.Vector3(Math.cos(t) * r, y, Math.sin(t) * r)); }
+  return pts;
+}
+function spikeGeo(rad, h) {
+  const pts = [];
+  for (let i = 0; i <= 10; i++) { const t = i / 10; pts.push(new THREE.Vector2(rad * (1 - t) ** 1.3 + 0.005, t * h)); }
+  pts.push(new THREE.Vector2(0, h + 0.005));
+  return new THREE.LatheGeometry(pts, 10);
+}
+function urchin(mat, { r = 0.33, flat = 0.9, n = 260, sr = 0.038, sh = 0.075, minY = -0.45, jit = 0.15 } = {}) {
+  const g = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.SphereGeometry(r, 48, 32), mat); body.scale.y = flat; g.add(body);
+  const dirs = fib(n, minY), mesh = new THREE.InstancedMesh(spikeGeo(sr, sh), mat, dirs.length);
+  const m = new THREE.Matrix4(), q = new THREE.Quaternion(), up = new THREE.Vector3(0, 1, 0);
+  dirs.forEach((d, i) => {
+    const p = d.clone().multiplyScalar(r * 0.96); p.y *= flat;
+    q.setFromUnitVectors(up, new THREE.Vector3(d.x, d.y / flat, d.z).normalize());
+    m.compose(p, q, new THREE.Vector3(1, 0.8 + ((i * 0.618) % 1) * jit * 2, 1)); mesh.setMatrixAt(i, m);
+  });
+  g.add(mesh);
+  return g;
+}
+function petalGeo(w, l, cup) { const g = new THREE.SphereGeometry(1, 18, 10, 0, Math.PI, 0, Math.PI); g.scale(w, l / 2, cup); g.translate(0, l / 2, 0); return g; }
+function dalia(mat, r = 0.42) {
+  const g = new THREE.Group(), rings = 6;
+  const c = new THREE.Mesh(new THREE.SphereGeometry(r * 0.24, 20, 14), mat); c.position.y = r * 0.55; g.add(c);
+  for (let k = 0; k < rings; k++) {
+    const t = k / (rings - 1), count = Math.round(8 + t * 14);
+    const mesh = new THREE.InstancedMesh(petalGeo(0.1 + t * 0.06, 0.16 + t * 0.26, 0.07), mat, count), m = new THREE.Matrix4();
+    for (let i = 0; i < count; i++) {
+      const a = (i / count) * Math.PI * 2 + k * 0.4;
+      const q = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, -a + Math.PI / 2, 0, "YXZ")).multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), 0.25 + t * 1.15));
+      m.compose(new THREE.Vector3(Math.cos(a) * r * 0.18 * (0.5 + t), r * 0.5 - t * r * 0.45, Math.sin(a) * r * 0.18 * (0.5 + t)), q, new THREE.Vector3(1, 1, 1));
+      mesh.setMatrixAt(i, m);
+    }
+    g.add(mesh);
+  }
+  return g;
+}
+function anemone(mat) {
+  const g = new THREE.Group(), base = 0.24;
+  const core = new THREE.Mesh(new THREE.SphereGeometry(base, 28, 20), mat); core.scale.y = 0.6; g.add(core);
+  const dirs = fib(180, -0.1), mesh = new THREE.InstancedMesh(spikeGeo(0.05, 0.22), mat, dirs.length);
+  const m = new THREE.Matrix4(), q = new THREE.Quaternion(), up = new THREE.Vector3(0, 1, 0);
+  dirs.forEach((d, i) => {
+    q.setFromUnitVectors(up, new THREE.Vector3(d.x * 1.1, d.y * 0.8 + 0.45, d.z * 1.1).normalize());
+    m.compose(d.clone().multiplyScalar(base * 0.8).setY(d.y * base * 0.45), q, new THREE.Vector3(1, 0.7 + ((i * 0.618) % 1) * 0.5, 1)); mesh.setMatrixAt(i, m);
+  });
+  g.add(mesh);
+  return g;
+}
+function diffuser(topper, topY, scale = 1) {
+  const g = new THREE.Group(), w = 0.62, h = 0.78;
+  const bottle = new THREE.Mesh(new RoundedBoxGeometry(w, h, w, 5, 0.07), glassMat()); bottle.position.y = h / 2; g.add(bottle);
+  const liq = new THREE.Mesh(new RoundedBoxGeometry(w - 0.08, h * 0.6, w - 0.08, 3, 0.04), liquidMat()); liq.position.y = 0.05 + h * 0.3; g.add(liq);
+  const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.12, 0.12, 28), glassMat()); neck.position.y = h + 0.05; g.add(neck);
+  const label = new THREE.Mesh(new THREE.PlaneGeometry(0.3, 0.08), new THREE.MeshStandardMaterial({ color: 0xb59a5a, transparent: true, opacity: 0.7 }));
+  label.position.set(0, h * 0.45, w / 2 + 0.002); g.add(label);
+  for (let i = 0; i < 7; i++) {
+    const a = (i / 7) * Math.PI * 2, tilt = 0.1 + (i % 3) * 0.05;
+    const reed = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 1.7, 6), reedMat());
+    reed.position.set(Math.cos(a) * 0.05, h + 0.7, Math.sin(a) * 0.05);
+    reed.rotation.set(Math.sin(a) * tilt, 0, -Math.cos(a) * tilt);
+    reed.userData.reed = true; g.add(reed);
+  }
+  topper.position.y = h + 0.1 + topY; g.add(topper);
+  g.scale.setScalar(scale);
+  return g;
+}
+function buildPiece(i, finishIdx) {
+  const p = DATA.products[i], mat = glazeMat(GLAZE[DEFAULTS.products[i].finishes[finishIdx].g]);
+  let m;
+  switch (DEFAULTS.products[i].shape) {
+    case "riccio": m = diffuser(urchin(mat), 0.2); break;
+    case "lady": m = diffuser(urchin(mat, { r: 0.3, flat: 1.45, n: 300, sr: 0.032, sh: 0.07, minY: -0.4 }), 0.33); break;
+    case "dalia": m = diffuser(dalia(mat), -0.05); break;
+    case "anemone": m = diffuser(anemone(mat), 0.06); break;
+    case "regina": m = diffuser(urchin(mat, { r: 0.33, flat: 0.95, n: 220, sr: 0.04, sh: 0.18, minY: -0.35, jit: 0.25 }), 0.24, 1.08); break;
+  }
+  m.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+  m.userData.glaze = mat;
+  return m;
+}
+const PIECE_SCALE = 0.31;      // fits the piece inside the page
+
+// holder → fold → spin → model
+function makeSlot() {
+  const holder = new THREE.Group(), fold = new THREE.Group(), spin = new THREE.Group();
+  holder.add(fold); fold.add(spin);
+  const contact = new THREE.Mesh(new THREE.PlaneGeometry(0.42, 0.42), new THREE.MeshBasicMaterial({ map: softShadowTexture(), transparent: true, depthWrite: false }));
+  contact.rotation.x = -Math.PI / 2; contact.position.y = 0.002; holder.add(contact);
+  return { holder, fold, spin, contact, model: null, index: -1, pop: 0, popAnim: null };
+}
+function setPop(slot, v) {
+  slot.pop = v;
+  slot.fold.scale.y = Math.max(0.001, v);
+  slot.fold.rotation.x = -0.35 * (1 - Math.min(1, v));
+  slot.contact.material.opacity = Math.min(1, Math.max(0, v));
+  slot.holder.visible = v > 0.005;
+}
+function fillSlot(slot, i) {
+  clearSlot(slot);
+  slot.model = buildPiece(i, finishSel[i]);
+  slot.model.scale.multiplyScalar(PIECE_SCALE);
+  slot.spin.add(slot.model); slot.index = i;
+}
+function clearSlot(slot) {
+  if (!slot.model) return;
+  slot.spin.remove(slot.model);
+  slot.model.traverse(o => { if (o.isMesh) { o.geometry.dispose(); [].concat(o.material).forEach(m => m.dispose()); } });
+  slot.model = null; slot.index = -1;
+}
+const pageSlot = makeSlot(), sheetSlot = makeSlot();
+pageSlot.holder.position.set(-SP_S * PW, pageH(SP_S) + 0.002, 0.02);
+book.add(pageSlot.holder, sheetSlot.holder);
+setPop(sheetSlot, 0);
+
+/* =========================================================================
+   5. TECHNICAL DRAWINGS — rendered from the 3D model itself
+   ========================================================================= */
+const drawRenderer = new THREE.WebGLRenderer({ antialias: false, preserveDrawingBuffer: true, alpha: true });
+const DRW = 300, DRH = 380;
+drawRenderer.setSize(DRW, DRH, false);
+const drawings = [];
+function technicalDrawing(i) {
+  if (drawings[i]) return drawings[i];
+  const m = buildPiece(i, 0);
+  const sc = new THREE.Scene();
+  let id = 1;
+  m.traverse(o => {
+    if (!o.isMesh) return;
+    if (o.userData.reed) { o.visible = false; return; }
+    const c = new THREE.Color().setHSL((id * 0.618) % 1, 0.9, 0.35 + (id % 3) * 0.15); id++;
+    o.material = new THREE.MeshBasicMaterial({ color: c });
+  });
+  sc.add(m);
+  m.updateMatrixWorld(true);
+  const box = new THREE.Box3();
+  m.traverse(o => { if (o.isMesh && o.visible) box.expandByObject(o); });
+  const size = box.getSize(new THREE.Vector3()), ctr = box.getCenter(new THREE.Vector3());
+  const half = Math.max(size.x, size.y, size.z) * 0.56;
+  const asp = DRW / DRH;
+  const cam = new THREE.OrthographicCamera(-half * asp, half * asp, half, -half, 0.01, 50);
+  const views = [];
+  for (const dir of [new THREE.Vector3(0, 0, 1), new THREE.Vector3(1, 0, 0)]) {
+    cam.position.copy(ctr).addScaledVector(dir, 10); cam.lookAt(ctr); cam.updateProjectionMatrix();
+    drawRenderer.setClearColor(0x000000, 0);
+    drawRenderer.render(sc, cam);
+    const gl = drawRenderer.getContext(), px = new Uint8Array(DRW * DRH * 4);
+    gl.readPixels(0, 0, DRW, DRH, gl.RGBA, gl.UNSIGNED_BYTE, px);
+    const out = makeCanvas(DRW, DRH), ox = out.getContext("2d"), od = ox.createImageData(DRW, DRH);
+    const key = (x, y) => { const k = ((DRH - 1 - y) * DRW + x) * 4; return px[k + 3] < 10 ? -1 : (px[k] << 16) | (px[k + 1] << 8) | px[k + 2]; };
+    for (let y = 1; y < DRH - 1; y++) for (let x = 1; x < DRW - 1; x++) {
+      const k0 = key(x, y);
+      if (k0 !== key(x + 1, y) || k0 !== key(x, y + 1) || k0 !== key(x - 1, y) || k0 !== key(x, y - 1)) {
+        const o = (y * DRW + x) * 4; od.data[o] = 34; od.data[o + 1] = 44; od.data[o + 2] = 58; od.data[o + 3] = 235;
+      }
+    }
+    ox.putImageData(od, 0, 0);
+    // projected extents in canvas pixels for the dimension lines
+    const toPx = (v) => { const p = v.clone().project(cam); return [(p.x + 1) / 2 * DRW, (1 - p.y) / 2 * DRH]; };
+    const [x0, y1] = toPx(new THREE.Vector3(dir.x ? ctr.x : box.min.x, box.min.y, dir.x ? box.max.z : ctr.z));
+    const [x1, y0] = toPx(new THREE.Vector3(dir.x ? ctr.x : box.max.x, box.max.y, dir.x ? box.min.z : ctr.z));
+    views.push({ img: out, x0: Math.min(x0, x1), x1: Math.max(x0, x1), y0, y1 });
+  }
+  m.traverse(o => { if (o.isMesh) { o.geometry.dispose(); o.material.dispose(); } });
+  const mm = v => Math.round(v * MM_PER_UNIT / 5) * 5;
+  drawings[i] = { views, w: mm(size.x), d: mm(size.z), h: mm(size.y) };
+  return drawings[i];
+}
+const autoDims = i => { const d = technicalDrawing(i); return `${d.w} × ${d.d} × ${d.h} ملم`; };
+
+/* =========================================================================
+   6. PRINTED PAGES (canvas 1400 × 1876)
+   ========================================================================= */
+const CW = 1400, CH = 1876;
+const INK = "#1d252b", NAVY = "#17456f", MUTED = "#7b7468", PAPER = "#eee4d2";
+const LAT = (w, s) => `${w} ${s}px "Cormorant Garamond", Georgia, serif`;
+const ARF = (w, s) => `${w} ${s}px "IBM Plex Sans Arabic", system-ui, sans-serif`;
+
+function paper(x, spineOnRight) {
+  x.fillStyle = PAPER; x.fillRect(0, 0, CW, CH);
+  x.fillStyle = x.createPattern(paperGrain, "repeat"); x.fillRect(0, 0, CW, CH);
+  const g = spineOnRight ? x.createLinearGradient(CW, 0, CW - 260, 0) : x.createLinearGradient(0, 0, 260, 0);
+  g.addColorStop(0, "rgba(96,66,34,.30)"); g.addColorStop(0.35, "rgba(96,66,34,.08)"); g.addColorStop(1, "rgba(96,66,34,0)");
+  x.fillStyle = g; x.fillRect(0, 0, CW, CH);
+  const e = spineOnRight ? x.createLinearGradient(0, 0, 40, 0) : x.createLinearGradient(CW, 0, CW - 40, 0);
+  e.addColorStop(0, "rgba(96,66,34,.10)"); e.addColorStop(1, "rgba(96,66,34,0)");
+  x.fillStyle = e; x.fillRect(0, 0, CW, CH);
+}
+function spaced(x, text, px, py, sp, align = "left") {
+  const chars = [...text], ws = chars.map(c => x.measureText(c).width);
+  const total = ws.reduce((a, b) => a + b, 0) + sp * (chars.length - 1);
+  let cx = align === "left" ? px : align === "right" ? px - total : px - total / 2;
+  const prevAlign = x.textAlign; x.textAlign = "left";
+  chars.forEach((c, k) => { x.fillText(c, cx, py); cx += ws[k] + sp; });
+  x.textAlign = prevAlign;
+  return total;
+}
+function spacedWidth(x, text, sp) { const chars = [...text]; return chars.reduce((a, c) => a + x.measureText(c).width, 0) + sp * (chars.length - 1); }
+function fitSize(x, fontFn, text, size, max, sp = 0) { while (size > 12) { x.font = fontFn(size); if ((sp ? spacedWidth(x, text, sp * size / 100) : x.measureText(text).width) <= max) break; size -= 2; } return size; }
+function wrap(x, text, max) {
+  const words = text.split(/\s+/), lines = []; let cur = "";
+  for (const w of words) { const t = cur ? cur + " " + w : w; if (x.measureText(t).width > max && cur) { lines.push(cur); cur = w; } else cur = t; }
+  if (cur) lines.push(cur);
+  return lines;
+}
+
+const swatchHits = [];   // canvas-space rects on the left page
+function drawLeft(i) {
+  const c = makeCanvas(CW, CH), x = c.getContext("2d"), p = DATA.products[i], P = 110;
+  paper(x, true);
+  x.textBaseline = "alphabetic"; x.direction = "ltr";
+  x.fillStyle = NAVY; x.font = ARF(500, 56); x.direction = "ltr"; x.fillText(pad2(i), P, 172);
+  x.fillStyle = MUTED; x.font = LAT(600, 24); spaced(x, "RICCIOCAPRESE", CW - P, 160, 7, "right");
+  const tSize = fitSize(x, s => LAT(500, s), p.title.toUpperCase(), 200, CW - 2 * P, 9);
+  x.fillStyle = INK; x.font = LAT(500, tSize); spaced(x, p.title.toUpperCase(), P - 6, 380, tSize * 0.09);
+  x.fillStyle = NAVY; const sSize = fitSize(x, s => LAT(600, s), p.subtitle.toUpperCase(), 30, CW - 2 * P, 26);
+  x.font = LAT(600, sSize); spaced(x, p.subtitle.toUpperCase(), P, 446, sSize * 0.26);
+  x.fillRect(P, 486, 120, 3);
+
+  // technical drawings
+  const d = technicalDrawing(i), boxW = 250, boxH = 316, top = 1330;
+  x.strokeStyle = "rgba(29,37,43,.55)"; x.fillStyle = "rgba(29,37,43,.75)"; x.lineWidth = 1.6;
+  d.views.forEach((v, k) => {
+    const ox = P + k * (boxW + 50), scl = Math.min(boxW / DRW, boxH / DRH);
+    x.drawImage(v.img, ox, top, DRW * scl, DRH * scl);
+    const X0 = ox + v.x0 * scl, X1 = ox + v.x1 * scl, Y0 = top + v.y0 * scl, Y1 = top + v.y1 * scl;
+    // horizontal dimension
+    const yy = Y1 + 26;
+    x.beginPath(); x.moveTo(X0, yy); x.lineTo(X1, yy); x.moveTo(X0, yy - 9); x.lineTo(X0, yy + 9); x.moveTo(X1, yy - 9); x.lineTo(X1, yy + 9); x.stroke();
+    x.font = ARF(500, 20); x.textAlign = "center"; x.fillText(`${k ? d.d : d.w} mm`, (X0 + X1) / 2, yy + 30);
+    if (k === 0) {
+      const xx = X0 - 26;
+      x.beginPath(); x.moveTo(xx, Y0); x.lineTo(xx, Y1); x.moveTo(xx - 9, Y0); x.lineTo(xx + 9, Y0); x.moveTo(xx - 9, Y1); x.lineTo(xx + 9, Y1); x.stroke();
+      x.save(); x.translate(xx - 14, (Y0 + Y1) / 2); x.rotate(-Math.PI / 2); x.fillText(`${d.h} mm`, 0, 0); x.restore();
+    }
+    x.font = LAT(600, 18); spaced(x, k ? "SIDE" : "FRONT", ox + boxW * 0.5, top - 16, 5, "center");
+    x.textAlign = "left";
+  });
+
+  // finish swatches (glaze | glass)
+  const S = 116, G = 26, sx0 = CW - P - 3 * S - 2 * G, sy = 1440;
+  x.fillStyle = MUTED; x.font = LAT(600, 20); spaced(x, "FINISHES", sx0, sy - 40, 6);
+  swatchHits.length = 0;
+  p.finishes.forEach((f, k) => {
+    const sx = sx0 + k * (S + G);
+    x.save(); x.beginPath(); x.rect(sx, sy, S, S); x.clip();
+    x.fillStyle = LIQUID; x.fillRect(sx, sy, S, S);
+    x.fillStyle = GLAZE[DEFAULTS.products[i].finishes[k].g];
+    x.beginPath(); x.moveTo(sx, sy); x.lineTo(sx + S, sy); x.lineTo(sx, sy + S); x.closePath(); x.fill();
+    x.restore();
+    x.strokeStyle = "rgba(0,0,0,.18)"; x.lineWidth = 1.5; x.strokeRect(sx, sy, S, S);
+    if (k === finishSel[i]) {
+      x.strokeStyle = NAVY; x.lineWidth = 4; x.strokeRect(sx - 9, sy - 9, S + 18, S + 18);
+      x.fillStyle = INK; const fs = fitSize(x, s => LAT(600, s), f.en.toUpperCase(), 21, S + 70, 20);
+      x.font = LAT(600, fs); spaced(x, f.en.toUpperCase(), sx + S / 2, sy + S + 50, fs * 0.2, "center");
+    }
+    swatchHits.push({ x: sx - 10, y: sy - 10, w: S + 20, h: S + 20, k });
+  });
+
+  x.fillStyle = MUTED; x.font = LAT(600, 20); spaced(x, "RICCIOCAPRESE · CATALOGUE 2026", P, CH - 80, 6);
+  x.font = ARF(500, 24); x.textAlign = "right"; x.fillText(pad2(i), CW - P, CH - 80); x.textAlign = "left";
+  return c;
+}
+
+function sadu(x, y, h) {
+  const P = 120, w = CW - 2 * P, n = 28, step = w / n;
+  for (let k = 0; k < n; k++) {
+    const x0 = P + k * step;
+    x.fillStyle = k % 2 ? NAVY : "#7aa3cc";
+    x.beginPath(); x.moveTo(x0, y + h); x.lineTo(x0 + step / 2, y); x.lineTo(x0 + step, y + h); x.closePath(); x.fill();
+    x.fillStyle = "#b28a4c"; x.beginPath(); x.moveTo(x0 + step / 2, y + h * 0.55); x.lineTo(x0 + step * 0.62, y + h * 0.78); x.lineTo(x0 + step / 2, y + h); x.lineTo(x0 + step * 0.38, y + h * 0.78); x.closePath(); x.fill();
+  }
+  x.fillStyle = NAVY; x.fillRect(P, y + h + 8, w, 2); x.fillRect(P, y - 10, w, 2);
+}
+function drawRight(i) {
+  const c = makeCanvas(CW, CH), x = c.getContext("2d"), p = DATA.products[i], f = p.finishes[finishSel[i]];
+  const P = 120, R = CW - P, maxW = CW - 2 * P;
+  paper(x, false);
+  x.textBaseline = "alphabetic";
+  x.direction = "ltr"; x.fillStyle = MUTED; x.font = LAT(600, 24);
+  spaced(x, `CATALOGUE 2026 — ${pad2(i)} / ${pad2(N - 1)}`, R, 170, 6, "right");
+
+  x.direction = "rtl"; x.textAlign = "right"; x.fillStyle = INK;
+  const nSize = fitSize(x, s => ARF(600, s), p.ar, 132, maxW); x.font = ARF(600, nSize); x.fillText(p.ar, R, 370);
+  x.direction = "ltr"; x.fillStyle = NAVY;
+  const eSize = fitSize(x, s => LAT(600, s), p.en.toUpperCase(), 36, maxW, 28); x.font = LAT(600, eSize);
+  spaced(x, p.en.toUpperCase(), R, 440, eSize * 0.28, "right");
+  x.fillStyle = "#b28a4c"; x.fillRect(R - 150, 478, 150, 4);
+
+  // description, max 5 lines
+  x.direction = "rtl"; x.textAlign = "right"; x.fillStyle = "#3b3f42";
+  let ds = 42, lines;
+  do { x.font = ARF(400, ds); lines = wrap(x, p.desc, maxW); ds -= 2; } while (lines.length > 5 && ds > 26);
+  lines.slice(0, 5).forEach((l, k) => x.fillText(l, R, 590 + k * ds * 1.75));
+
+  // spec rows
+  const rows = [["المقاسات", p.dims || autoDims(i)], ["الخامة", `بورسلان مزجّج يدوياً · ${f.ar}`], [p.extraLabel, p.extraValue], ["التوصيل", p.delivery]];
+  let y = 1040;
+  rows.forEach(([k, v]) => {
+    x.strokeStyle = "rgba(60,46,30,.22)"; x.lineWidth = 1.5; x.beginPath(); x.moveTo(P, y - 52); x.lineTo(R, y - 52); x.stroke();
+    x.fillStyle = MUTED; x.font = ARF(500, 30); x.textAlign = "right"; x.fillText(k, R, y);
+    const labelW = x.measureText(k).width;
+    x.fillStyle = INK; const vs = fitSize(x, s => ARF(500, s), v, 32, maxW - labelW - 40); x.font = ARF(500, vs);
+    x.textAlign = "left"; x.fillText(v, P, y);
+    y += 86;
+  });
+  x.beginPath(); x.moveTo(P, y - 52); x.lineTo(R, y - 52); x.stroke();
+
+  // price
+  x.textAlign = "right"; x.fillStyle = MUTED; x.font = ARF(500, 30); x.fillText("السعر", R, 1470);
+  x.direction = "ltr"; x.fillStyle = INK; x.font = ARF(600, 112); x.textAlign = "right";
+  const priceStr = String(f.price); x.fillText(priceStr, R, 1600);
+  const pw = x.measureText(priceStr).width;
+  x.direction = "rtl"; x.font = ARF(500, 42); x.fillStyle = NAVY; x.textAlign = "right"; x.fillText("د.أ", R - pw - 22, 1596);
+  x.fillStyle = MUTED; x.font = ARF(400, 26); x.fillText("الأسعار بالدينار الأردني · يتم ترتيب التوصيل معك", R, 1650);
+
+  sadu(x, 1700, 30);
+  x.direction = "rtl"; x.textAlign = "right"; x.fillStyle = MUTED; x.font = ARF(500, 24); x.fillText("ريتشوكابريزي · الأردن", R, CH - 80);
+  x.direction = "ltr"; x.textAlign = "left"; x.font = ARF(500, 24); x.fillText(pad2(i), P, CH - 80);
+  return c;
+}
+
+// texture cache, keyed by side+page; invalidated on edits / finish changes
+const texCache = new Map();
+function pageTex(side, i) {
+  const key = side + i;
+  if (!texCache.has(key)) texCache.set(key, tex(side === "L" ? drawLeft(i) : drawRight(i)));
+  return texCache.get(key);
+}
+function invalidate(i) { for (const s of ["L", "R"]) { const k = s + i; if (texCache.has(k)) { texCache.get(k).dispose(); texCache.delete(k); } } }
+function prune(keep) { for (const [k, t] of texCache) if (!keep.includes(k)) { t.dispose(); texCache.delete(k); } }
+function setMap(mesh, t) { mesh.material.map = t; mesh.material.needsUpdate = true; }
+
+/* =========================================================================
+   7. STATE: current page, pop-up, page turn
+   ========================================================================= */
+let cur = 0, turn = null;
+function showPage(i) {
+  setMap(leftPage, pageTex("L", i)); setMap(rightPage, pageTex("R", i));
+}
+function popUp(slot, delay = 0) {
+  slot.popAnim = { t0: performance.now() + delay, dur: reduceMotion ? 200 : 750 };
+}
+
+function startTurn(to) {
+  if (turn || to === cur || to < 0 || to >= N) return false;
+  const dir = to > cur ? 1 : -1, from = cur;
+  stopZoom();
+  turn = { dir, from, to, t0: performance.now(), dur: reduceMotion ? 450 : 1500, popped: false };
+  if (dir > 0) {
+    setMap(sheetFront, pageTex("L", from)); setMap(sheetBack, pageTex("R", to));
+    setMap(leftPage, pageTex("L", to));
+    // the current piece rides the lifting sheet; the next piece waits folded on the page below
+    swapSlots();
+    fillSlot(pageSlot, to); setPop(pageSlot, 0); pageSlot.popAnim = null;
+  } else {
+    setMap(sheetFront, pageTex("L", to)); setMap(sheetBack, pageTex("R", from));
+    setMap(rightPage, pageTex("R", to));
+    fillSlot(sheetSlot, to); setPop(sheetSlot, 0);
+  }
+  sheetFront.visible = sheetBack.visible = true;
+  cur = to; syncUI();
+  return true;
+}
+function swapSlots() {
+  // move the model from pageSlot into sheetSlot
+  clearSlot(sheetSlot);
+  sheetSlot.model = pageSlot.model; sheetSlot.index = pageSlot.index;
+  if (sheetSlot.model) sheetSlot.spin.add(sheetSlot.model);
+  sheetSlot.spin.rotation.y = pageSlot.spin.rotation.y;
+  pageSlot.model = null; pageSlot.index = -1; pageSlot.spin.rotation.y = 0;
+  setPop(sheetSlot, pageSlot.pop);
+}
+function updateTurn(now) {
+  if (!turn) return;
+  const t = Math.min(1, (now - turn.t0) / turn.dur), e = easeInOutCubic(t);
+  const alpha0 = turn.dir > 0 ? e * Math.PI : (1 - e) * Math.PI;
+  shapeSheet(alpha0, t, turn.dir);
+  // piece riding the sheet
+  sheetSlot.holder.position.copy(sheetAnchor.pos);
+  sheetSlot.holder.rotation.set(0, 0, -sheetAnchor.angle);
+  if (turn.dir > 0) {
+    setPop(sheetSlot, 1 - smooth(0.05, 1.25, alpha0));
+    if (!turn.popped && alpha0 > Math.PI / 2) { turn.popped = true; popUp(pageSlot); }
+  } else {
+    setPop(sheetSlot, 1 - smooth(0.05, 1.25, alpha0));
+    setPop(pageSlot, smooth(0.45, 1.6, alpha0) * (pageSlot.model ? 1 : 0));
+  }
+  if (t >= 1) {
+    sheetFront.visible = sheetBack.visible = false;
+    if (turn.dir > 0) { setMap(rightPage, pageTex("R", turn.to)); clearSlot(sheetSlot); setPop(sheetSlot, 0); }
+    else {
+      setMap(leftPage, pageTex("L", turn.to));
+      clearSlot(pageSlot);
+      pageSlot.model = sheetSlot.model; pageSlot.index = sheetSlot.index; sheetSlot.model = null;
+      if (pageSlot.model) pageSlot.spin.add(pageSlot.model);
+      setPop(pageSlot, 1); setPop(sheetSlot, 0);
+    }
+    prune(["L" + cur, "R" + cur]);
+    turn = null;
+    fitCamera(true);
+    turnWaiters.splice(0).forEach(r => r());
+  }
+}
+const turnWaiters = [];
+const waitTurn = () => new Promise(r => (turn ? turnWaiters.push(r) : r()));
+
+function setFinish(k, pulse = true) {
+  if (finishSel[cur] === k) return;
+  finishSel[cur] = k;
+  invalidate(cur); showPage(cur);
+  const g = GLAZE[DEFAULTS.products[cur].finishes[k].g];
+  if (pageSlot.model) pageSlot.model.userData.glaze.color.set(g);
+  if (pulse) pageSlot.pulse = performance.now();
+  syncUI();
+}
+
+/* =========================================================================
+   8. CAMERA: fit, zoom, tweens
+   ========================================================================= */
+const POLAR = 0.56;
+let fitState = { target: new THREE.Vector3(), dist: 4 };
+function freeRect() {
+  const top = 78, bottomEl = document.querySelector(".bottom").getBoundingClientRect();
+  const playing = document.body.classList.contains("playing");
+  const bottom = playing ? innerHeight - 20 : Math.min(innerHeight - 20, bottomEl.top - 8);
+  const side = isMobile() ? 12 : 84;
+  return { l: side, r: innerWidth - side, t: playing ? 60 : top, b: bottom };
+}
+function applyViewOffset() {
+  const f = freeRect(), w = innerWidth, h = innerHeight;
+  const cy = (f.t + f.b) / 2, cx = (f.l + f.r) / 2;
+  camera.setViewOffset(w, h, w / 2 - cx, h / 2 - cy, w, h);
+}
+function fitPoints() {
+  const pts = [], mobile = isMobile();
+  const xs = mobile ? [-PW, 0] : [-PW, PW];
+  for (const x of xs) for (const z of [-PH / 2, PH / 2]) pts.push(new THREE.Vector3(x, 0, z), new THREE.Vector3(x, 0.08, z));
+  pts.push(new THREE.Vector3(-SP_S * PW, 0.95, 0.02));   // top of the piece with its reeds
+  return pts.map(p => book.localToWorld(p));
+}
+function fitCamera(soft) {
+  applyViewOffset();
+  const f = freeRect(), pts = fitPoints();
+  const target = new THREE.Vector3();
+  if (isMobile()) target.copy(book.localToWorld(new THREE.Vector3(-PW / 2, 0.1, 0)));
+  else target.copy(book.localToWorld(new THREE.Vector3(0, 0.1, 0)));
+  const dir = new THREE.Vector3(0, Math.cos(POLAR), Math.sin(POLAR));
+  const fits = d => {
+    camera.position.copy(target).addScaledVector(dir, d); camera.lookAt(target); camera.updateMatrixWorld(); camera.updateProjectionMatrix();
+    return pts.every(p => {
+      const v = p.clone().project(camera);
+      const sx = (v.x + 1) / 2 * innerWidth, sy = (1 - v.y) / 2 * innerHeight;
+      return sx >= f.l && sx <= f.r && sy >= f.t && sy <= f.b && v.z < 1;
+    });
+  };
+  let lo = 0.8, hi = 20;
+  for (let k = 0; k < 28; k++) { const mid = (lo + hi) / 2; if (fits(mid)) hi = mid; else lo = mid; }
+  fitState = { target, dist: hi * 1.02 };
+  controls.minDistance = fitState.dist * 0.3; controls.maxDistance = fitState.dist * 1.7;
+  if (soft) tweenCam({ target, dist: fitState.dist, polar: POLAR, az: 0 }, 700);
+  else { controls.target.copy(target); setSpherical(target, fitState.dist, POLAR, 0); }
+}
+function setSpherical(target, dist, polar, az) {
+  camera.position.set(target.x + dist * Math.sin(polar) * Math.sin(az), target.y + dist * Math.cos(polar), target.z + dist * Math.sin(polar) * Math.cos(az));
+  camera.lookAt(target); controls.target.copy(target); controls.update();
+}
+let camTween = null;
+function tweenCam(to, dur) {
+  const off = camera.position.clone().sub(controls.target);
+  const sph = new THREE.Spherical().setFromVector3(off);
+  camTween = { from: { target: controls.target.clone(), dist: sph.radius, polar: sph.phi, az: sph.theta }, to, t0: performance.now(), dur: reduceMotion ? 1 : dur };
+  return new Promise(r => (camTween.done = r));
+}
+function updateCamTween(now) {
+  if (!camTween) return;
+  const t = Math.min(1, (now - camTween.t0) / camTween.dur), e = easeInOutCubic(t), a = camTween.from, b = camTween.to;
+  let daz = b.az - a.az; daz = Math.atan2(Math.sin(daz), Math.cos(daz));
+  const target = a.target.clone().lerp(b.target, e);
+  setSpherical(target, THREE.MathUtils.lerp(a.dist, b.dist, e), THREE.MathUtils.lerp(a.polar, b.polar, e), a.az + daz * e);
+  if (t >= 1) { const d = camTween.done; camTween = null; d && d(); }
+}
+let zoomed = false;
+function pieceCenter() { return book.localToWorld(new THREE.Vector3(-SP_S * PW, 0.32, 0.02)); }
+function zoomPiece() { zoomed = true; $("tZoom").classList.add("on"); return tweenCam({ target: pieceCenter(), dist: fitState.dist * 0.42, polar: 0.98, az: 0.55 }, 1100); }
+function stopZoom() { if (!zoomed) return; zoomed = false; $("tZoom").classList.remove("on"); }
+function home() { stopZoom(); return tweenCam({ target: fitState.target, dist: fitState.dist, polar: POLAR, az: 0 }, 900); }
+
+/* =========================================================================
+   9. INTERACTION
+   ========================================================================= */
+const $ = id => document.getElementById(id);
+const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
+let down = null;
+canvas.addEventListener("pointerdown", e => { down = { x: e.clientX, y: e.clientY }; if (playing) stopAutoplay(); });
+canvas.addEventListener("pointerup", e => {
+  if (!down) return;
+  const moved = Math.hypot(e.clientX - down.x, e.clientY - down.y); down = null;
+  if (moved > 6 || turn) return;
+  const r = canvas.getBoundingClientRect();
+  ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+  ray.setFromCamera(ndc, camera);
+  const objs = [leftPage, rightPage]; if (pageSlot.model) objs.push(pageSlot.model);
+  const hit = ray.intersectObjects(objs, true)[0];
+  if (!hit) return;
+  if (hit.object === leftPage) {
+    const px = hit.uv.x * CW, py = (1 - hit.uv.y) * CH;
+    drawLeftHits(cur);
+    const s = swatchHits.find(h => px >= h.x && px <= h.x + h.w && py >= h.y && py <= h.y + h.h);
+    if (s) return setFinish(s.k);
+    if (hit.uv.x < 0.12) return go(cur + 1);
+  } else if (hit.object === rightPage) {
+    if (hit.uv.x > 0.88) return go(cur - 1);
+  } else {
+    zoomed ? home() : zoomPiece();
+  }
+});
+// swatch rects are recorded while drawing; make sure they belong to the current page
+let hitsFor = -1;
+function drawLeftHits(i) { if (hitsFor !== i) { drawLeft(i); hitsFor = i; } }
+
+function go(i) { if (startTurn(i)) hitsFor = -1; }
+$("next").onclick = () => go(cur + 1);
+$("prev").onclick = () => go(cur - 1);
+addEventListener("keydown", e => {
+  if (e.target.closest("input, textarea")) return;
+  if (playing) { stopAutoplay(); return; }
+  if (e.key === "ArrowLeft") go(cur + 1);
+  if (e.key === "ArrowRight") go(cur - 1);
+  if (e.key === "Escape") { closeDrawer(); home(); }
+});
+let spinning = false;
+$("tSpin").onclick = () => { spinning = !spinning; $("tSpin").classList.toggle("on", spinning); };
+$("tZoom").onclick = () => (zoomed ? home() : zoomPiece());
+$("tHome").onclick = () => { spinning = false; $("tSpin").classList.remove("on"); home(); };
+
+/* ---------- bottom panel ---------- */
+function syncUI() {
+  const p = DATA.products[cur], f = p.finishes[finishSel[cur]];
+  $("count").textContent = `${pad2(cur)} / ${pad2(N - 1)}`;
+  $("nameAr").textContent = p.ar;
+  $("nameEn").textContent = p.en.toUpperCase();
+  $("price").textContent = f.price;
+  const fin = $("finishes"); fin.replaceChildren();
+  p.finishes.forEach((ff, k) => {
+    const b = document.createElement("button");
+    b.className = "finish" + (k === finishSel[cur] ? " on" : "");
+    const i = document.createElement("i");
+    i.style.background = `linear-gradient(135deg, ${GLAZE[DEFAULTS.products[cur].finishes[k].g]} 50%, ${LIQUID} 50%)`;
+    const s = document.createElement("span"); s.textContent = ff.ar;
+    b.append(i, s); b.onclick = () => setFinish(k);
+    b.setAttribute("aria-label", ff.ar);
+    fin.append(b);
+  });
+  const dots = $("dots"); dots.replaceChildren();
+  for (let k = 0; k < N; k++) { const b = document.createElement("button"); b.textContent = pad2(k); if (k === cur) b.className = "on"; b.onclick = () => go(k); dots.append(b); }
+  $("next").disabled = cur >= N - 1; $("prev").disabled = cur <= 0;
+  const msg = `مرحباً، أرغب بطلب:\n${p.ar} (${p.en})\nالخامة: ${f.ar} / ${f.en}\nالسعر: ${f.price} د.أ`;
+  const num = DATA.whatsapp.replace(/\D/g, "");
+  $("wa").href = `https://wa.me/${num}?text=${encodeURIComponent(msg)}`;
+}
+function toast(t, ms = 2400) { const el = $("toast"); el.textContent = t; el.classList.add("show"); clearTimeout(toast._t); toast._t = setTimeout(() => el.classList.remove("show"), ms); }
+
+/* =========================================================================
+   10. AUTOPLAY (for filming reels)
+   ========================================================================= */
+let playing = false, playToken = 0;
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+async function autoplay() {
+  const token = ++playToken;
+  playing = true; document.body.classList.add("playing"); $("tPlay").classList.add("on");
+  toast("اضغط في أي مكان للإيقاف", 2600);
+  fitCamera(false);
+  const alive = () => playing && token === playToken;
+  while (alive()) {
+    await sleep(500); if (!alive()) break;
+    const startFinish = finishSel[cur];
+    autoSpin = true;
+    await tweenCam({ target: pieceCenter(), dist: fitState.dist * 0.5, polar: 1.0, az: 0.7 }, 1800); if (!alive()) break;
+    for (let k = 1; k <= 3; k++) { await sleep(1800); if (!alive()) break; setFinish((startFinish + k) % 3); }
+    if (!alive()) break;
+    autoSpin = false;
+    await tweenCam({ target: fitState.target, dist: fitState.dist, polar: POLAR, az: 0 }, 1400); if (!alive()) break;
+    await sleep(400); if (!alive()) break;
+    go(cur >= N - 1 ? 0 : cur + 1);
+    await waitTurn();
+  }
+}
+let autoSpin = false;
+function stopAutoplay() {
+  if (!playing) return;
+  playing = false; playToken++; autoSpin = false; camTween = null;
+  document.body.classList.remove("playing"); $("tPlay").classList.remove("on");
+  pageSlot.spin.rotation.y = 0;
+  fitCamera(true);
+  if (location.hash === "#autoplay") history.replaceState(null, "", location.pathname + location.search);
+}
+$("tPlay").onclick = e => { e.stopPropagation(); playing ? stopAutoplay() : autoplay(); };
+document.addEventListener("pointerdown", e => { if (playing && !e.target.closest("#tPlay")) stopAutoplay(); }, true);
+
+/* =========================================================================
+   11. OWNER PANEL  (claude db when available, otherwise localStorage)
+   ========================================================================= */
+const LS_KEY = "ricciocaprese-book-v1";
+let remote = null, tab = 0;
+function lsGet() { try { return JSON.parse(localStorage.getItem(LS_KEY) || "null"); } catch { return null; } }
+function lsSet(v) { try { localStorage.setItem(LS_KEY, JSON.stringify(v)); return true; } catch { return false; } }
+
+function applyData(d, redrawAll = true) {
+  DATA = sanitize(d);
+  if (redrawAll) { for (let i = 0; i < N; i++) invalidate(i); hitsFor = -1; if (!turn) showPage(cur); }
+  syncUI();
+  if ($("drawer").classList.contains("open")) buildForm();
+}
+let redrawT = null;
+// sanitize without replacing the objects the form fields are bound to
+function cleanInPlace() {
+  const c = sanitize(DATA);
+  DATA.whatsapp = c.whatsapp;
+  DATA.products.forEach((p, i) => {
+    for (const k in LIMITS) p[k] = c.products[i][k];
+    p.finishes.forEach((f, j) => Object.assign(f, c.products[i].finishes[j]));
+  });
+}
+function scheduleRedraw(i) {
+  clearTimeout(redrawT);
+  redrawT = setTimeout(() => { cleanInPlace(); invalidate(i); hitsFor = -1; if (!turn && i === cur) showPage(cur); syncUI(); }, 180);
+}
+function field(label, value, onInput, { multi = false, ltr = false, max = 60, type = "text" } = {}) {
+  const l = document.createElement("label"); l.className = "field" + (ltr ? " ltr" : "");
+  l.append(document.createTextNode(label));
+  const el = document.createElement(multi ? "textarea" : "input");
+  if (!multi) el.type = type;
+  el.maxLength = max; el.value = value ?? "";
+  el.addEventListener("input", () => onInput(el.value));
+  l.append(el);
+  return l;
+}
+function buildForm() {
+  const tabs = $("dTabs"); tabs.replaceChildren();
+  for (let k = 0; k < N; k++) { const b = document.createElement("button"); b.textContent = pad2(k); if (k === tab) b.className = "on"; b.onclick = () => { tab = k; if (k !== cur) go(k); buildForm(); }; tabs.append(b); }
+  const p = DATA.products[tab], f = $("dForm"); f.replaceChildren();
+  const set = k => v => { p[k] = v; scheduleRedraw(tab); };
+  f.append(
+    field("الاسم العربي", p.ar, set("ar"), { max: LIMITS.ar }),
+    field("الاسم الإنجليزي", p.en, set("en"), { ltr: true, max: LIMITS.en }),
+    field("عنوان الصفحة", p.title, set("title"), { ltr: true, max: LIMITS.title }),
+    field("العنوان الفرعي", p.subtitle, set("subtitle"), { ltr: true, max: LIMITS.subtitle }),
+    field("الوصف", p.desc, set("desc"), { multi: true, max: LIMITS.desc }),
+    field("المقاسات (فارغ = تلقائي من النموذج)", p.dims, set("dims"), { max: LIMITS.dims }),
+    field("التسليم", p.delivery, set("delivery"), { max: LIMITS.delivery }),
+    field("مواصفة إضافية — العنوان", p.extraLabel, set("extraLabel"), { max: LIMITS.extraLabel }),
+    field("مواصفة إضافية — القيمة", p.extraValue, set("extraValue"), { max: LIMITS.extraValue })
+  );
+  p.finishes.forEach((fi, k) => {
+    const g = document.createElement("div"); g.className = "fgroup";
+    const h = document.createElement("p"); h.textContent = `الخامة ${k + 1}`; g.append(h);
+    const row = document.createElement("div"); row.className = "grid3";
+    row.append(
+      field("عربي", fi.ar, v => { fi.ar = v; scheduleRedraw(tab); }, { max: 30 }),
+      field("إنجليزي", fi.en, v => { fi.en = v; scheduleRedraw(tab); }, { ltr: true, max: 30 }),
+      field("السعر", fi.price, v => { fi.price = v; scheduleRedraw(tab); }, { ltr: true, max: 6, type: "number" })
+    );
+    g.append(row); f.append(g);
+  });
+  $("dWa").value = DATA.whatsapp;
+  resetArmed = false; $("dReset").textContent = "استرجاع الافتراضي"; $("dReset").classList.remove("warn");
+}
+$("dWa").addEventListener("input", e => { DATA.whatsapp = e.target.value.replace(/\D/g, "").slice(0, 16); syncUI(); });
+function openDrawer() { tab = cur; buildForm(); $("drawer").classList.add("open"); }
+function closeDrawer() { $("drawer").classList.remove("open"); }
+$("tAdmin").onclick = () => ($("drawer").classList.contains("open") ? closeDrawer() : openDrawer());
+$("dClose").onclick = closeDrawer;
+$("dSave").onclick = async () => {
+  const clean = sanitize(DATA);
+  $("dSaved").textContent = "جارٍ الحفظ…";
+  try {
+    if (remote) await remote.set({ json: JSON.stringify(clean), updatedAt: Date.now() });
+    else if (!lsSet(clean)) throw new Error("storage");
+    $("dSaved").textContent = remote ? "تم الحفظ — يظهر لكل من يفتح الكتالوج" : "تم الحفظ على هذا الجهاز";
+  } catch (err) { $("dSaved").textContent = "تعذّر الحفظ، حاول مرة أخرى"; }
+};
+let resetArmed = false;
+$("dReset").onclick = () => {
+  if (!resetArmed) { resetArmed = true; $("dReset").textContent = "اضغط مرة ثانية للتأكيد"; $("dReset").classList.add("warn"); return; }
+  DATA.products[tab] = clone(DEFAULTS.products[tab]);
+  applyData(DATA); toast("تم استرجاع بيانات القطعة — اضغط حفظ لتثبيتها");
+};
+
+async function initStorage() {
+  const local = lsGet(); if (local) applyData(local);
+  const claudeRT = window.claude;
+  if (!claudeRT?.use) {
+    // Plain hosting: the panel is shown to the owner via #admin in the URL.
+    if (/admin/.test(location.hash)) $("tAdmin").hidden = false;
+    return;
+  }
+  try {
+    const [db, user] = await Promise.all([claudeRT.use("db"), claudeRT.use("user")]);
+    if (user && (await user.canEdit())) $("tAdmin").hidden = false;
+    if (db) {
+      remote = db.doc("catalog/main");
+      remote.onSnapshot(snap => {
+        const d = snap.data();
+        if (d && typeof d.json === "string") { try { applyData(JSON.parse(d.json)); } catch {} }
+      }, () => {});
+    }
+  } catch {}
+}
+
+/* =========================================================================
+   12. LOOP + BOOT
+   ========================================================================= */
+function resize() {
+  renderer.setSize(innerWidth, innerHeight, false);
+  camera.aspect = innerWidth / innerHeight;
+  fitCamera(false);
+}
+addEventListener("resize", resize);
+
+let lastT = performance.now();
+renderer.setAnimationLoop(now => {
+  const dt = Math.min(0.05, (now - lastT) / 1000); lastT = now;
+  updateTurn(now);
+  for (const slot of [pageSlot]) {
+    if (slot.popAnim && now >= slot.popAnim.t0) {
+      const t = Math.min(1, (now - slot.popAnim.t0) / slot.popAnim.dur);
+      setPop(slot, reduceMotion ? t : easeOutBack(t));
+      if (t >= 1) { slot.popAnim = null; setPop(slot, 1); }
+    }
+  }
+  if (pageSlot.pulse) {
+    const t = (now - pageSlot.pulse) / 380;
+    pageSlot.spin.scale.setScalar(1 + Math.sin(Math.min(1, t) * Math.PI) * 0.06);
+    if (t >= 1) { pageSlot.pulse = 0; pageSlot.spin.scale.setScalar(1); }
+  }
+  if ((spinning || autoSpin) && !reduceMotion) pageSlot.spin.rotation.y += dt * (autoSpin ? 0.5 : 0.9);
+  updateCamTween(now);
+  if (!camTween) controls.update();
+  renderer.render(scene, camera);
+});
+
+async function boot() {
+  const fontsReady = Promise.all([
+    document.fonts.load(LAT(500, 100)), document.fonts.load(LAT(600, 100)),
+    document.fonts.load(ARF(400, 40), "مرحبا"), document.fonts.load(ARF(500, 40), "مرحبا"), document.fonts.load(ARF(600, 40), "مرحبا")
+  ]);
+  await Promise.race([fontsReady, sleep(5000)]);
+  await initStorage();
+  showPage(cur);
+  fillSlot(pageSlot, cur); setPop(pageSlot, 0);
+  syncUI();
+  resize();
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    $("loader").classList.add("gone");
+    popUp(pageSlot, 350);
+    if (location.hash === "#autoplay") setTimeout(autoplay, 1200);
+  }));
+}
+boot();
+</script>
+</body>
+</html>

@@ -120,3 +120,59 @@ Ideas for next steps:
 2. An Arabic version that reads right to left
 3. A "View in your room" (AR) button on phones
 4. A "View in 3D" button on the main website
+
+---
+
+# Part 2 — Pop-up Book Catalogue (`catalog/book.html`)
+
+The second version follows the reel's "pop-up book" prompt, adapted for Ricciocaprese. The catalogue is an open hardcover book on a dark walnut table in warm late-afternoon sun. Each piece pops up from the page in 3D and folds back down when the page turns.
+
+## The 5 pages
+
+| # | Piece | Arabic | Finishes (glaze) | Price |
+|---|---|---|---|---|
+| 01 | RICCIO · M12 | ريتشو | Azzurro Capri · Rosso · Bianco | 100 JOD |
+| 02 | LADY CAPRI · M10 | ليدي كابري | Blu Notte · Corallo · Grigio Perla | 115 JOD |
+| 03 | DALIA · M12 | داليا | Lilla · Ciclamino · Giallo | 100 JOD |
+| 04 | ANEMONE · M12 | أنيموني | Acquamarina · Blu Capri · Bianco | 100 JOD |
+| 05 | REGINA · 300 ml | ريجينا | Verde Ramino · Bordeaux · Nero | 140 JOD |
+
+## What's in it
+
+- **Scene:** a walnut table with a clear-coat shine, warm sun from the upper left, and an invisible window frame that throws slanted stripes of light and shadow over the book.
+- **The book:** reads right to left. It has a navy linen cover, striped page edges, and pages that curve down into the spine.
+  - The **left page** has the piece, a large English title, technical drawings with mm dimensions, the printed finish swatches, and the footer.
+  - The **right page** is in Arabic: the name, a description, a spec table, the price in JOD, and a Sadu-style triangle border.
+- **Technical drawings:** made from the 3D model itself. It's drawn flat from the front and the side, the outlines are traced as ink lines, and the dimensions come from the model's size.
+- **Pop-up:** the piece rises out of the page with a small overshoot and a soft contact shadow under it.
+- **Page turn:** "Next" lifts the left page and turns it over to the right. The page bends, with the free edge trailing behind. The old piece folds down while riding the turning page, and the new piece pops up once the page passes the middle.
+- **Finishes:** choose from the bottom panel or by tapping the swatches printed on the page. The 3D model, the printed swatch frame, the Arabic spec row and the price all update together.
+- **Camera:** an overhead "handheld" view that frames the book automatically in the free space on screen. On phones it shows only the piece page. Tap the piece to zoom in.
+- **Controls:**
+  - Top-left buttons: Autoplay, 360° spin, Zoom to piece, Reset view.
+  - Arrows on each side ("Next" is on the left), plus the page numbers 01–05.
+  - Keyboard: ← next, → previous.
+- **WhatsApp:** the "اطلب عبر واتساب" button opens WhatsApp with a ready-made order message (piece, finish, price).
+- **Autoplay (for filming Reels):** press the button, or add `#autoplay` to the link. The UI hides and the camera moves in close. It cycles the three glazes, zooms back out and turns the page, then loops. Tap anywhere to stop.
+- **Owner panel:** open the page with `#admin` at the end of the link (for example `book.html#admin`). You can edit names, titles, the description, dimensions, delivery text, the extra spec, each finish's name and price, and the shop's WhatsApp number. The pages redraw as you type.
+  - **Save:** on normal hosting, this saves in the browser on that device only.
+  - **Shared saves:** if the page is published as a Claude artifact, saves go to a shared database everyone sees, and only editors see the panel.
+  - **Reset:** "Reset to default" needs two taps.
+
+## Tested
+
+I tested it in a headless browser (software rendering):
+- Loading and the pop-up
+- Turning the page forward and back
+- Changing the finish from the panel and from the printed swatch
+- Editing a price in the owner panel and seeing it on the printed page
+- Saving and reloading
+- Starting and stopping autoplay
+- Phone layout (iPhone 13 size)
+
+There were no console errors.
+
+## Limits
+
+- The pieces are built in code. They're close to the real designs, but not scans.
+- Saving from the owner panel on GitHub Pages only saves on that one device. Shared editing needs it published as a Claude artifact, or a small backend.
